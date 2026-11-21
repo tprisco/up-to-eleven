@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Pick a rip, measure it, and (optionally) publish. No typing of folder names.
+#   ./add                  choose from the folders in ../Rips
+#   ./add "some folder"    measure that folder directly
+set -euo pipefail
+cd "$(dirname "$0")"
+RIPS="${RIPS:-../Rips}"
+
+if [ $# -ge 1 ]; then
+  folder="$1"
+else
+  [ -d "$RIPS" ] || { echo "No Rips folder found at $RIPS"; exit 1; }
+  folders=(); while IFS= read -r f; do folders+=("$f"); done < <(ls -1t "$RIPS" | while IFS= read -r n; do [ -d "$RIPS/$n" ] && echo "$n"; done)
+  [ ${#folders[@]} -gt 0 ] || { echo "No rip folders inside $RIPS"; exit 1; }
+  echo "Rips (newest first):"
+  i=1; for n in "${folders[@]}"; do
+    mark=""; [ -f "$RIPS/$n/info.json" ] && mark="  (already measured)"
+    echo "  $i) $n$mark"; i=$((i+1))
+  done
+  read -r -p "Number: " pick
+  [[ "$pick" =~ ^[0-9]+$ ]] && [ "$pick" -ge 1 ] && [ "$pick" -le ${#folders[@]} ] || { echo "Not a valid number."; exit 1; }
+  folder="$RIPS/${folders[$((pick-1))]}"
+fi
+
+python3 pipeline/measure.py "$folder"
+echo
+read -r -p "Publish to the site now? [y/N] " go
+if [[ "$go" =~ ^[Yy]$ ]]; then ./publish.sh "Add $(basename "$folder")"; else echo "Not published. Run ./publish.sh when ready."; fi

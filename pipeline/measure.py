@@ -35,7 +35,7 @@ TOOL = "up-to-eleven measure.py 1"
 BIN_S = 0.1            # all gating blocks are built from 100 ms bins
 CURVE_POINTS = 100     # points in the album loudness curve
 CLIP_LEVEL = 0.999     # samples at or above this count as clipped
-AUDIO_EXT = {".flac", ".wav", ".aif", ".aiff"}
+AUDIO_EXT = {".flac", ".wav", ".aif", ".aiff", ".mp3"}
 
 
 # ---------- K-weighting (ITU-R BS.1770-4), valid for any sample rate ----------
@@ -299,9 +299,41 @@ def check(data_dir):
     return not problems
 
 
+IMG_EXT = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+def cue_info(folder):
+    """Artist, title, barcode and year from the cue sheet, if there is one."""
+    cues = sorted(folder.glob("*.cue"))
+    if not cues:
+        return {}
+    head = read_text(cues[0]).split("TRACK")[0]
+    def grab(pat):
+        m = re.search(pat, head, re.M)
+        return m.group(1).strip() if m else None
+    return {"artist": grab(r'^\s*PERFORMER\s+"(.*?)"'), "title": grab(r'^\s*TITLE\s+"(.*?)"'),
+            "barcode": grab(r'^\s*CATALOG\s+(\d+)'), "pressing_year_guess": grab(r'^\s*REM DATE\s+(\d{4})')}
+
+
+def find_cover(folder):
+    imgs = sorted(p for p in folder.iterdir() if p.suffix.lower() in IMG_EXT and not p.name.startswith("."))
+    for p in imgs:
+        if re.search(r"cover|front|folder|album", p.stem, re.I):
+            return p
+    return imgs[0] if imgs else None
+
+
+def ask(prompt, default=None):
+    if not sys.stdin.isatty():
+        sys.exit(f"Missing: {prompt}. Put it in info.json in the rip folder, or pass it as an option.")
+    v = input(f"{prompt}" + (f" [{default}]" if default else "") + ": ").strip()
+    return v or default
+
+
 def main():
-    ap = argparse.ArgumentParser(description="Measure a ripped CD and add it to the site data.")
-    ap.add_argument("rip_dir", nargs="?", help="folder with the FLAC/WAV files, .cue and .log")
+    ap = argparse.ArgumentParser(description="Measure a ripped CD folder and add it to the site data.",
+                                 epilog="Easiest use: python3 pipeline/measure.py <rip folder>. It reads the cue sheet, finds the cover, and asks for anything missing.")
+    ap.add_argument("rip_dir", nargs="?", help="folder with the FLAC/WAV files, .cue, .log and cover image")
     ap.add_argument("--album-id"); ap.add_argument("--title"); ap.add_argument("--artist"); ap.add_argument("--album-year", type=int)
     ap.add_argument("--year", type=int, help="release year of this pressing"); ap.add_argument("--label", help='for example "Early CD" or "2011 Remaster"')
     ap.add_argument("--catalog"); ap.add_argument("--barcode"); ap.add_argument("--note"); ap.add_argument("--cover")
@@ -309,20 +341,63 @@ def main():
     args = ap.parse_args()
     if args.check:
         sys.exit(0 if check(args.data_dir) else 1)
-    if not (args.rip_dir and args.album_id and args.year and args.label):
-        ap.error("need rip_dir, --album-id, --year and --label (or use --check)")
-    args.album_id = slug(args.album_id)
+    if not args.rip_dir:
+        ap.error("give the rip folder (or use --check)")
     folder = Path(args.rip_dir).expanduser()
     if not folder.is_dir():
         sys.exit(f"{folder} is not a folder")
-    print(f"Measuring {folder}")
+    # Fill details: options first, then info.json in the folder, then the cue sheet, then ask.
+    saved = {}
+    ij = folder / "info.json"
+    if ij.exists():
+        saved = json.loads(ij.read_text())
+    cue = cue_info(folder)
+    def pick(opt, key, *fallbacks):
+        for v in (opt, saved.get(key), *fallbacks):
+            if v not in (None, ""):
+                return v
+        return None
+    artist = pick(args.artist, "artist", cue.get("artist"))
+    title = pick(args.title, "title", cue.get("title"))
+    aid = args.album_id or saved.get("album_id")
+    existing = None
+    if not aid and artist and title:
+        aid = slug(f"{artist}-{title}")
+    if aid and (Path(args.data_dir) / "albums" / f"{slug(aid)}.json").exists():
+        existing = load_json(Path(args.data_dir) / "albums" / f"{slug(aid)}.json", {})
+        artist = artist or existing.get("artist"); title = title or existing.get("title")
+    if not existing:
+        artist = artist or ask("Artist"); title = title or ask("Album title")
+        aid = aid or slug(f"{artist}-{title}")
+        args.album_year = pick(args.album_year, "album_year") or int(ask("Year the album first came out"))
+    args.album_id = slug(aid); args.artist = artist; args.title = title
+    args.year = int(pick(args.year, "year") or ask("Release year of THIS pressing", cue.get("pressing_year_guess")))
+    args.label = pick(args.label, "label") or ask('Short name for this pressing (for example "Early CD" or "2011 Remaster")')
+    args.catalog = pick(args.catalog, "catalog") or ask("Catalog number printed on the disc or case (Enter to skip)", "") or ""
+    args.barcode = pick(args.barcode, "barcode", cue.get("barcode")) or ""
+    args.note = pick(args.note, "note") or ""
+    cov = args.cover or saved.get("cover")
+    if cov:
+        cov = Path(cov).expanduser(); cov = cov if cov.is_absolute() else folder / cov
+    else:
+        cov = find_cover(folder)
+    args.cover = str(cov) if (cov and not (existing and existing.get("cover") and not args.cover)) else None
+    if args.cover: print(f"Cover: {Path(args.cover).name}")
+    print(f"\n{artist} - {title} ({args.year} {args.label})\nMeasuring {folder}")
     result = measure_folder(folder); log = read_log(folder)
     m = result["metrics"]
     print(f"\nAlbum: {fmt(m['lufs'])} LUFS, LRA {fmt(m['lra'])} LU, crest {fmt(m['crest'])} dB, peak {fmt(m['peak'])} dBFS, clipped {m['clip_pct']} %")
     print(f"Rip log: {log['ripper']}, AccurateRip: {log['accuraterip']}")
+    if any(t["file"].lower().endswith(".mp3") for t in result["tracks"]):
+        print("  WARNING: these are MP3s. MP3 is lossy, so the numbers are only good for testing. Do not publish them as real measurements.")
     if log["accuraterip"] != "All tracks accurate":
         print("  Note: the log does not confirm every track. Read it before publishing.")
     update_data(args, result, log)
+    if not args.dry_run:
+        keep = {"artist": artist, "title": title, "album_id": args.album_id, "album_year": args.album_year if not existing else existing.get("year"),
+                "year": args.year, "label": args.label, "catalog": args.catalog, "barcode": args.barcode}
+        try: ij.write_text(json.dumps(keep, indent=2) + "\n")
+        except OSError: pass
 
 
 if __name__ == "__main__":

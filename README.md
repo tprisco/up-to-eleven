@@ -30,15 +30,20 @@ A custom address such as a colgate.edu subdomain is optional later; GitHub Pages
 
 1. Download the files from your Drive "Review (checked)" folder into one folder, for example `~/Rips/rush-2112-1989`.
    Open the `.log` and check it says all tracks were accurately ripped.
-2. Measure it:
+2. Measure it, just give it the folder:
 
-       python3 pipeline/measure.py ~/Rips/rush-2112-1989 \
-         --album-id rush-2112 --title "2112" --artist Rush --album-year 1976 \
-         --year 1989 --label "Early CD" --catalog "822 545-2 M-1" --barcode "" \
-         --cover ~/Rips/2112.jpg
+       python3 pipeline/measure.py ~/Rips/rush-2112-1989
 
-   For a new version of an album already in the data, give only `--album-id --year --label --catalog`.
-   Add `--dry-run` first to see the numbers without writing anything.
+   It reads the artist, album title and barcode from the `.cue`, uses the cover image in the folder
+   (a file named cover/front/folder, or the only image), and asks you for anything it cannot know:
+   the album's first release year, the pressing's release year, a short name for the pressing
+   (like "Early CD"), and the catalog number. It then saves your answers in `info.json` inside the
+   rip folder, so running it again on that folder asks nothing.
+   Add `--dry-run` to see the numbers without writing anything.
+   To add another pressing of an album already in the data, make a new rip folder and run it the same way;
+   it recognises the album by artist and title.
+   You can also skip all questions by putting an `info.json` in the folder, or by using options
+   such as `--year 1989 --label "Early CD" --catalog "822 545-2 M-1"` (see `--help`).
 3. Publish: `./publish.sh "Add 2112, 1989 Early CD"`
 4. Set the row's Status to "Published" in your Submissions sheet to send the contributor the thank-you email.
 
