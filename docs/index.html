@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Up to Eleven? Loudness across CD pressings</title>
+<meta name="description" content="Demo of Up to Eleven?, a project that measures how loudness and dynamics changed across CD versions of the same album.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Instrument+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+/* Hallmark · shape: stage · genre: atmospheric · theme: custom · job: try · idea: "liquid glass over a quiet dusk plum with faint record grooves, with a vinyl record behind the volume dial and records peeking out from behind each album cover" · vibe: "liquid glass, dusk violet and rose, apricot light, vinyl grooves"
+ * paper: oklch(16% 0.03 295) · accent: oklch(84% 0.1 65) · display: Fraunces · body: Instrument Sans · hero: a left-aligned serif headline beside a dial set on a vinyl record · nav: wordmark left, a floating glass pill of six links right · footer: one plain line · imagery: the real album covers, the record, the meter strip · signature: the dial on the record that turns the waveform flat at eleven
+ * axes: dark/roman-serif/chromatic-dusk · posture: committed · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R3 V4 · weakest: R, translucent glass is a familiar system look; the person asked for it, so it is kept to two fixed blooms and one blur radius */
+:root {
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px;
+  --text-xs: 0.8125rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.25rem; --text-xl: 1.5625rem;
+  --text-hero: clamp(2.5rem, 5.4vw, 4.75rem); --text-display-s: clamp(2.25rem, 4.6vw, 3.75rem); --text-section: clamp(1.75rem, 2.2vw + 1rem, 2.5rem); --text-title: clamp(1.375rem, 1vw + 1rem, 1.75rem); --text-lead: clamp(1.125rem, 0.35vw + 1rem, 1.375rem);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-micro: 120ms; --dur-short: 220ms;
+  --color-paper: oklch(17% 0.022 295); --color-paper-2: oklch(22% 0.026 295); --color-paper-3: oklch(28% 0.03 295);
+  --color-ink: oklch(96% 0.01 300); --color-ink-2: oklch(86% 0.02 300); --color-muted: oklch(75% 0.03 300); --color-rule: oklch(100% 0 0 / 0.18);
+  --color-accent: oklch(84% 0.07 65); --color-accent-ink: oklch(20% 0.04 295); --color-focus: oklch(92% 0.08 80);
+  --color-success-text: oklch(84% 0.12 160);
+  --series-1: oklch(84% 0.07 65); --series-2: oklch(76% 0.09 305); --series-3: oklch(80% 0.07 200); --series-4: oklch(96% 0.01 300);
+  --orb-1: oklch(33% 0.06 300);
+  --glass-fill: oklch(100% 0 0 / 0.07); --glass-fill-strong: oklch(100% 0 0 / 0.14); --glass-edge: oklch(100% 0 0 / 0.2); --glass-hi: oklch(100% 0 0 / 0.36); --glass-shadow: oklch(5% 0.03 295 / 0.5);
+  --vinyl: oklch(12% 0.025 295 / 0.72); --groove-a: oklch(100% 0 0 / 0.06); --groove-b: oklch(0% 0 0 / 0.2); --sheen: oklch(100% 0 0 / 0.11);
+  --font-display: "Fraunces", "Georgia", serif; --font-body: "Instrument Sans", ui-sans-serif, system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --radius-card: 16px; --radius-panel: 28px; --radius-control: 999px; --container: 1200px; --gutter: 56px; --gap-columns: 32px;
+  --tracking-display: -0.025em;
+  --blur: blur(22px) saturate(1.5);
+}
+[data-scheme="twilight"] {
+  --color-paper: oklch(16% 0.035 268); --color-paper-2: oklch(22% 0.04 268); --color-paper-3: oklch(28% 0.045 268);
+  --color-ink: oklch(96% 0.01 270); --color-ink-2: oklch(86% 0.02 270); --color-muted: oklch(75% 0.03 270);
+  --color-accent: oklch(86% 0.09 285); --color-accent-ink: oklch(19% 0.04 268); --color-focus: oklch(92% 0.07 285);
+  --series-1: oklch(86% 0.09 285); --series-2: oklch(80% 0.1 200); --series-3: oklch(84% 0.1 70); --series-4: oklch(96% 0.01 270);
+  --orb-1: oklch(35% 0.08 270);
+}
+[data-scheme="ocean"] {
+  --color-paper: oklch(16% 0.03 245); --color-paper-2: oklch(22% 0.035 245); --color-paper-3: oklch(28% 0.04 245);
+  --color-ink: oklch(96% 0.01 230); --color-ink-2: oklch(86% 0.02 230); --color-muted: oklch(75% 0.03 235);
+  --color-accent: oklch(85% 0.1 195); --color-accent-ink: oklch(18% 0.04 245); --color-focus: oklch(92% 0.08 195);
+  --series-1: oklch(85% 0.1 195); --series-2: oklch(76% 0.13 255); --series-3: oklch(84% 0.1 80); --series-4: oklch(96% 0.01 230);
+  --orb-1: oklch(35% 0.07 235);
+}
+[data-scheme="graphite"] {
+  --color-paper: oklch(17% 0.008 280); --color-paper-2: oklch(23% 0.01 280); --color-paper-3: oklch(29% 0.012 280);
+  --color-ink: oklch(96% 0.005 280); --color-ink-2: oklch(86% 0.008 280); --color-muted: oklch(74% 0.01 280);
+  --color-accent: oklch(90% 0.06 85); --color-accent-ink: oklch(18% 0.01 280); --color-focus: oklch(94% 0.05 85);
+  --series-1: oklch(90% 0.06 85); --series-2: oklch(74% 0.1 300); --series-3: oklch(78% 0.08 210); --series-4: oklch(96% 0.005 280);
+  --orb-1: oklch(32% 0.02 280);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scrollbar-color: var(--color-muted) var(--color-paper); }
+body { margin: 0; background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; -webkit-font-smoothing: antialiased; caret-color: var(--color-accent); }
+::selection { background: color-mix(in oklab, var(--color-accent) 30%, transparent); color: var(--color-ink); }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 450; font-synthesis: none; overflow-wrap: break-word; min-width: 0; text-wrap: balance; letter-spacing: var(--tracking-display); }
+p { margin: 0; text-wrap: pretty; }
+img { max-width: 100%; height: auto; display: block; }
+svg { display: block; }
+button, input, select, textarea { font: inherit; }
+a { color: var(--color-ink); text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+a:hover { color: var(--color-accent); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.page { position: relative; isolation: isolate; min-height: 100%; background: var(--color-paper); }
+.page::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(70% 60% at 15% 0%, color-mix(in oklab, var(--orb-1) 80%, transparent), transparent 75%); }
+.page::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: repeating-radial-gradient(circle at 92% -14%, var(--groove-a) 0 1px, transparent 1px 16px); -webkit-mask-image: radial-gradient(75% 85% at 92% 0%, black, transparent 80%); mask-image: radial-gradient(75% 85% at 92% 0%, black, transparent 80%); }
+.wrap { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }
+.glass, .sect, .stage, .navpill, .notice, .chip, .btn-ghost, details.guide { background-color: var(--glass-fill); background-image: linear-gradient(140deg, var(--glass-fill-strong), transparent 45%); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-fill), 0 24px 48px -20px var(--glass-shadow); color: var(--color-ink); }
+.glass, .sect, .stage { border-radius: var(--radius-panel); }
+.sect { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); }
+.sect { background-color: color-mix(in oklab, var(--color-paper-2) 94%, transparent); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 24px 48px -24px var(--glass-shadow); }
+.stage { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); }
+.navpill { display: flex; flex-wrap: wrap; gap: var(--space-2xs); padding: var(--space-2xs); border-radius: var(--radius-control); }
+.navbtn { background: none; border: none; color: var(--color-ink-2); cursor: pointer; padding: var(--space-sm) var(--space-md); border-radius: var(--radius-control); font-size: 0.9375rem; font-weight: 500; transition: color var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out); }
+.navbtn:hover { color: var(--color-ink); background-color: var(--glass-fill-strong); }
+.btn { display: inline-block; cursor: pointer; background: var(--color-accent); color: var(--color-accent-ink); border: 1px solid var(--glass-hi); border-radius: var(--radius-control); padding: var(--space-md) var(--space-lg); font-weight: 600; font-size: var(--text-md); text-decoration: none; box-shadow: inset 0 1px 0 var(--glass-hi), 0 12px 28px -12px var(--glass-shadow); transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); }
+.btn:hover { background: var(--color-ink); color: var(--color-paper); }
+.btn:active { transform: translateY(1px); }
+.btn.btn-ghost { background-color: var(--glass-fill); background-image: linear-gradient(140deg, var(--glass-fill-strong), transparent 45%); color: var(--color-ink); }
+.btn.btn-ghost:hover { background-color: var(--glass-fill-strong); color: var(--color-ink); }
+.chip { cursor: pointer; display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-control); font-weight: 500; font-size: var(--text-md); transition: opacity var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out); }
+.chip:hover { background-color: var(--glass-fill-strong); }
+.contrib { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--space-lg); align-items: start; }
+.fgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm) var(--space-md); }
+.fgrid .field { padding: var(--space-xs) var(--space-md); }
+.span2 { grid-column: 1 / -1; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-sm); font-size: var(--text-sm); color: var(--color-ink-2); }
+.steps li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: var(--space-sm); }
+.steps .num { color: var(--color-accent); }
+.steps strong { color: var(--color-ink); }
+@media (max-width: 60rem) { .contrib { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 40rem) { .fgrid { grid-template-columns: minmax(0, 1fr); } }
+.tracklist { padding: var(--space-md) var(--space-xl); display: flex; flex-direction: column; }
+.trk { display: grid; grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-lg); align-items: baseline; padding: var(--space-lg) 0; border-top: 1px solid var(--color-rule); }
+.trk:first-child { border-top: 0; }
+.trk.plain { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+@media (max-width: 48rem) { .trk, .trk.plain { grid-template-columns: minmax(0, 1fr); gap: var(--space-xs); } .tracklist { padding-inline: var(--space-lg); } }
+.dial { display: flex; flex-direction: column; align-items: center; gap: var(--space-md); }
+.dial label { margin-top: var(--space-xl); position: relative; }
+.dial-face { position: relative; width: 100%; max-width: 340px; }
+.dial-face svg { position: relative; }
+.record { position: absolute; left: 50%; top: 50%; width: 128%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--glass-edge); background-color: var(--vinyl); background-image: conic-gradient(from 30deg, transparent 0 18%, var(--sheen) 24%, transparent 30% 68%, var(--sheen) 74%, transparent 80%), repeating-radial-gradient(circle at center, var(--groove-a) 0 1px, var(--groove-b) 1px 3px); box-shadow: 0 30px 60px -24px var(--glass-shadow); pointer-events: none; }
+.tile { position: relative; isolation: isolate; background: none; border: 0; padding: 0; text-align: left; color: var(--color-ink); cursor: pointer; display: flex; flex-direction: column; gap: var(--space-xs); min-width: 0; }
+.tile::before { content: ""; position: absolute; z-index: -1; top: 5%; right: -12%; width: 84%; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--glass-edge); background-color: var(--vinyl); background-image: radial-gradient(circle, var(--color-accent) 0 9%, transparent 9.5%), repeating-radial-gradient(circle at center, var(--groove-a) 0 1px, var(--groove-b) 1px 3px); transition: transform var(--dur-short) var(--ease-out); }
+.tile:hover::before { transform: translateX(6%); }
+.tile .box { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--glass-fill); border-radius: 20px; border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-hi), 0 24px 40px -20px var(--glass-shadow); margin-bottom: var(--space-xs); }
+.tile img { width: 100%; height: 100%; object-fit: cover; transition: opacity var(--dur-short) var(--ease-out); }
+.tile:hover .tname { color: var(--color-accent); }
+.tname { font-family: var(--font-display); font-weight: 450; font-size: var(--text-title); line-height: 1.15; transition: color var(--dur-short) var(--ease-out); }
+@media (min-width: 60rem) { .tile:nth-child(even) { transform: translateY(var(--space-xl)); } }
+input[type=range] { width: 100%; accent-color: var(--color-accent); cursor: pointer; height: 32px; }
+input[type=range]:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+.field { font-family: var(--font-body); font-size: var(--text-md); padding: var(--space-sm) var(--space-md); border: 1px solid var(--glass-edge); border-radius: var(--radius-card); background: var(--glass-fill); box-shadow: inset 0 1px 2px var(--glass-shadow); color: var(--color-ink); }
+.btn:disabled, .chip:disabled, .field:disabled { opacity: 0.5; cursor: not-allowed; }
+.field::placeholder { color: var(--color-muted); }
+details.guide { border-radius: var(--radius-card); padding: var(--space-sm) var(--space-md); color: var(--color-ink-2); max-width: 760px; box-shadow: inset 0 1px 0 var(--glass-hi); }
+details.guide summary { cursor: pointer; font-weight: 600; color: var(--color-ink); }
+details.guide summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+details.guide p { margin-top: var(--space-sm); }
+.stat { display: flex; flex-direction: column; gap: var(--space-2xs); }
+.stat .big { font-family: var(--font-mono); font-size: var(--text-xl); color: var(--color-ink); font-variant-numeric: tabular-nums; }
+.label { color: var(--color-muted); font-size: var(--text-sm); }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.notice { padding: var(--space-sm) var(--space-md); font-size: var(--text-sm); color: var(--color-ink-2); border-radius: var(--radius-card); box-shadow: inset 0 1px 0 var(--glass-hi); }
+@media (max-width: 60rem) { :root { --gutter: 24px; } .stage { padding: var(--space-md); } }
+@media (max-width: 40rem) { :root { --gutter: 16px; --gap-columns: 16px; } .sect { padding: var(--space-lg); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+html, body { height: auto; }
+</style></head>
+<body>
+<div id="app"></div>
+<script>
+class DCLogic { constructor(p) { this.props = p || {}; } setState(o) { Object.assign(this.state, o); window.__render(); } }
+
+// Contribute form mode. true = pretend to send (no network). false = post to the Apps Script link below.
+const DEMO_MODE = false;
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxupbbvY7vLxb11lFEKKpo9IX9JhPQQxg1rcN1tLJTKnqiB4J3n9rcVDFU9hyAzZu-www/exec';
+// Data folder, relative to the page. The site reads data/index.json and data/albums/<id>.json.
+const DATA_URL = 'data/';
+// true: if the data folder cannot be read, show the demo albums. Set false on the published site.
+const DEMO_FALLBACK = false;
+const MAX_FILE = 1024 * 1024 * 1024;
+const MAX_TOTAL = 2 * 1024 * 1024 * 1024;
+const MAX_FILES = 40;
+const CHUNK = 8 * 1024 * 1024;
+const AUDIO_EXT = ['flac', 'wav', 'aif', 'aiff', 'm4a', 'mp3', 'ogg'];
+const OK_EXT = AUDIO_EXT.concat(['jpg', 'jpeg', 'png', 'webp', 'log', 'cue', 'txt']);
+async function callScript(payload) {
+  const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+  const out = await res.json();
+  if (!out.ok) throw new Error(out.error || 'Could not send.');
+  return out;
+}
+async function putChunk(url, blob, a, b, total) {
+  for (let n = 1; n <= 4; n++) {
+    try { const r = await fetch(url, { method: 'PUT', headers: { 'Content-Range': 'bytes ' + a + '-' + b + '/' + total }, body: blob }); if ([200, 201, 308].indexOf(r.status) > -1) return; throw new Error('Upload error ' + r.status); }
+    catch (e) { if (n === 4) throw new Error('The upload was interrupted. Please check your connection and try again.'); await new Promise((ok) => setTimeout(ok, 1000 * n)); }
+  }
+}
+
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { data: { mode: 'loading', albums: [] }, view: 'home', album: 0, hidden: {}, query: '', sent: false, contribName: '', form: { aa: '', cat: '', bar: '', em: '' }, sending: false, cerr: '', progress: '', metric: 0, hiddenAlbums: {}, gain: 8, check: { busy: false, error: '', res: null, name: '' } };
+}
+async loadData() {
+  if (DEMO_MODE) { this.setState({ data: { mode: 'demo', albums: [] } }); return; }
+  try {
+    const get = async (p) => { const r = await fetch(DATA_URL + p, { cache: 'no-cache' }); if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); };
+    const idx = await get('index.json');
+    const albums = [];
+    for (const e of idx.albums || []) {
+      const a = await get(e.file);
+      albums.push({ id: a.id, title: a.title, artist: a.artist, year: a.year, cover: a.cover ? DATA_URL + a.cover : '', raw: a,
+        versions: (a.versions || []).map((v) => ({ year: v.year, label: v.label, id: v.catalog || '', barcode: v.barcode || '', metrics: v.metrics || null, curve: v.curve || null, rip: v.rip || null, tracks: v.tracks || [] })) });
+    }
+    this.setState({ data: { mode: 'live', albums: albums, updated: idx.updated || '' } });
+  } catch (err) {
+    this.setState({ data: { mode: DEMO_FALLBACK ? 'demo' : 'error', albums: [] } });
+  }
+}
+analyze(chs, fs) {
+  const kw = (x) => {
+    const sh = (() => { const G = 3.999843853973347, f0 = 1681.974450955533, Q = 0.7071752369554196; const K = Math.tan(Math.PI * f0 / fs), Vh = Math.pow(10, G / 20), Vb = Math.pow(Vh, 0.4996667741545416); const a0 = 1 + K / Q + K * K; return { b: [(Vh + Vb * K / Q + K * K) / a0, 2 * (K * K - Vh) / a0, (Vh - Vb * K / Q + K * K) / a0], a: [1, 2 * (K * K - 1) / a0, (1 - K / Q + K * K) / a0] }; })();
+    const hp = (() => { const f0 = 38.13547087602444, Q = 0.5003270373238773; const K = Math.tan(Math.PI * f0 / fs); const a0 = 1 + K / Q + K * K; return { b: [1 / a0, -2 / a0, 1 / a0], a: [1, 2 * (K * K - 1) / a0, (1 - K / Q + K * K) / a0] }; })();
+    const run = (inp, f) => { const out = new Float64Array(inp.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0; const b = f.b, a = f.a; for (let i = 0; i < inp.length; i++) { const x0 = inp[i]; const y0 = b[0] * x0 + b[1] * x1 + b[2] * x2 - a[1] * y1 - a[2] * y2; out[i] = y0; x2 = x1; x1 = x0; y2 = y1; y1 = y0; } return out; };
+    return run(run(x, sh), hp);
+  };
+  const n = chs[0].length;
+  const w = chs.map(kw);
+  // cumulative sums of squares, summed over channels
+  const cs = new Float64Array(n + 1);
+  for (let i = 0; i < n; i++) { let s = 0; for (let c = 0; c < w.length; c++) s += w[c][i] * w[c][i]; cs[i + 1] = cs[i] + s; }
+  const blocks = (win, hop) => { const W = Math.round(win * fs), H = Math.round(hop * fs); const out = []; for (let s = 0; s + W <= n; s += H) out.push((cs[s + W] - cs[s]) / W); return out; };
+  const lufs = (ms) => -0.691 + 10 * Math.log10(ms);
+  const mom = blocks(0.4, 0.1);
+  let integrated = -Infinity;
+  {
+    const abs = mom.filter((m) => lufs(m) > -70);
+    if (abs.length) { const mean = abs.reduce((a, b) => a + b, 0) / abs.length; const rel = lufs(mean) - 10; const g = abs.filter((m) => lufs(m) > rel); if (g.length) integrated = lufs(g.reduce((a, b) => a + b, 0) / g.length); }
+  }
+  const st = blocks(3, 1);
+  const stl = blocks(3, 0.1);
+  let lra = 0;
+  {
+    const abs = stl.filter((m) => lufs(m) > -70);
+    if (abs.length) { const mean = abs.reduce((a, b) => a + b, 0) / abs.length; const rel = lufs(mean) - 20; const g = abs.filter((m) => lufs(m) > rel).map(lufs).sort((a, b) => a - b); if (g.length > 1) { const p = (q) => g[Math.min(g.length - 1, Math.max(0, Math.round(q * (g.length - 1))))]; lra = p(0.95) - p(0.10); } }
+  }
+  let peak = 0, sumsq = 0, clip = 0, tot = 0;
+  for (let c = 0; c < chs.length; c++) { const x = chs[c]; for (let i = 0; i < n; i++) { const v = Math.abs(x[i]); if (v > peak) peak = v; sumsq += v * v; if (v >= 0.999) clip++; } tot += n; }
+  const rmsDb = 10 * Math.log10(sumsq / tot + 1e-20), peakDb = 20 * Math.log10(peak + 1e-12);
+  return { integrated: integrated, lra: lra, peakDb: peakDb, crest: peakDb - rmsDb, plr: peakDb - integrated, clipPct: 100 * clip / tot, short: st.map(lufs), seconds: n / fs };
+
+}
+renderVals() {
+const COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)'];
+const DASHES = ['', '10 6', '2 6', '14 5 3 5'];
+const GLYPHS = ['Solid', 'Dashed', 'Dotted', 'Dash-dot'];
+const DEMO = [
+{ title: '2112', artist: 'Rush', year: 1976, cover: '',
+versions: [
+{ year: 1989, label: 'Early CD', id: '822 545-2 M-1' },
+{ year: 1996, label: 'Remaster', id: '314 534 626-2' },
+{ year: 2005, label: 'Remaster', id: '66825107829' },
+{ year: 2012, label: 'Deluxe edition', id: '602537150151' } ] },
+{ title: 'Superunknown', artist: 'Soundgarden', year: 1994, cover: '',
+versions: [
+{ year: 1994, label: 'Original CD', id: '31454 0198 2' },
+{ year: 2014, label: 'Remaster', id: '[to confirm]' } ] },
+{ title: 'The Dark Side of the Moon', artist: 'Pink Floyd', year: 1973, cover: '',
+versions: [
+{ year: 1992, label: 'Early CD', id: '0777 7 46001 2 5' },
+{ year: 2011, label: 'Remaster', id: '5099902895529' },
+{ year: 2016, label: 'Remaster', id: '[to confirm]' } ] },
+{ title: 'Moving Pictures', artist: 'Rush', year: 1981, cover: '',
+versions: [
+{ year: 1989, label: 'Early CD', id: '800 048-2' },
+{ year: 1997, label: 'Remaster', id: '314 534 631-2' },
+{ year: 2015, label: 'Remaster', id: '602435876597' } ] }
+];
+const s = this.state;
+if (!this._dl) { this._dl = true; this.loadData(); }
+const mode = s.data.mode, isDemo = mode === 'demo', isLive = mode === 'live';
+const ALBUMS = isDemo ? DEMO : s.data.albums;
+const NOCOVER = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#2a2430"/><circle cx="5" cy="5" r="3" fill="none" stroke="#6f6578" stroke-width=".3"/><circle cx="5" cy="5" r=".6" fill="#6f6578"/></svg>');
+const view = (s.view === 'album' && !ALBUMS[s.album]) ? 'home' : s.view;
+const ai = Math.min(s.album, Math.max(0, ALBUMS.length - 1));
+const al = ALBUMS[ai] || { title: '', artist: '', year: '', cover: '', versions: [] };
+const MKEY = ['lufs', 'lra', 'crest', 'clip_pct'];
+let cmax = 0.1; ALBUMS.forEach((a) => a.versions.forEach((v) => { if (v.metrics && v.metrics.clip_pct > cmax) cmax = v.metrics.clip_pct; }));
+const MRANGE = [[-26, -6], [0, 20], [3, 20], [0, cmax]];
+const frac = (m, val) => Math.max(0, Math.min(1, (val - MRANGE[m][0]) / (MRANGE[m][1] - MRANGE[m][0])));
+const mval = (v, m) => (v && v.metrics && typeof v.metrics[MKEY[m]] === 'number') ? v.metrics[MKEY[m]] : null;
+const rng = (seed) => { let x = seed; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; };
+const gain = s.gain;
+const WN = 96;
+const wr = rng(7); const wave = []; let flat = 0;
+for (let n = 0; n < WN; n++) { const env = 0.25 + 0.6 * Math.abs(Math.sin(n / 9)); const a = Math.min(1, env * (0.55 + wr() * 0.6)); const raw = a * gain / 6; const clipped = raw > 1; if (clipped) flat++; const hp = Math.max(3, Math.min(1, raw) * 200); wave.push({ x: n * 10, y: 110 - hp / 2, h: hp, fill: clipped ? 'var(--color-accent)' : 'var(--color-ink-2)' }); }
+const rad = (d) => d * Math.PI / 180;
+const knobTicks = []; for (let k = 1; k <= 11; k++) { const ang = -135 + (k - 1) * 27; const sx = Math.sin(rad(ang)), cy = -Math.cos(rad(ang)); knobTicks.push({ x1: 150 + sx * 100, y1: 150 + cy * 100, x2: 150 + sx * 114, y2: 150 + cy * 114, tx: 150 + sx * 131, ty: 150 + cy * 131 + 4, label: String(k), color: k <= gain ? 'var(--color-accent)' : 'var(--color-rule)' }); }
+const gainNote = gain >= 11 ? 'Eleven. Flat tops all the way across.' : gain >= 8 ? 'The peaks are starting to flatten.' : 'Plenty of headroom. Keep turning.';
+
+const allVers = al.versions.map((v, i) => ({
+year: v.year, label: v.label, id: v.id || '\u2014', color: COLORS[i % 4], dash: DASHES[i % 4], glyph: GLYPHS[i % 4], src: v,
+rip: v.rip ? (v.rip.ripper + ', AccurateRip: ' + String(v.rip.accuraterip).toLowerCase()) : (isDemo ? 'Not yet measured' : 'Not measured'),
+key: ai + '-' + i, on: !s.hidden[ai + '-' + i], idx: i
+}));
+const visible = allVers.filter((v) => v.on);
+
+const curves = visible.filter((v) => isDemo || (v.src.curve && v.src.curve.length > 1)).map((v) => {
+if (!isDemo) {
+  const c = v.src.curve;
+  const pts = c.map((val, n) => (70 + n * (910 / (c.length - 1))).toFixed(0) + ',' + (270 - Math.max(0, Math.min(1, (val + 36) / 32)) * 240).toFixed(0));
+  return { points: pts.join(' '), color: v.color, dash: v.dash, glyph: v.glyph, year: v.year };
+}
+const r = rng(ai * 131 + v.idx * 977 + 13);
+const base = rng(ai * 17 + 5);
+const pts = [];
+for (let n = 0; n < 19; n++) {
+const x = 70 + n * (910 / 18);
+const common = 150 + 55 * Math.sin(n * 0.7 + ai) * (base() * 0.6 + 0.4);
+const y = Math.max(50, Math.min(250, common + (r() - 0.5) * 50 - v.idx * 6 + (v.idx % 2 ? 10 : -10)));
+pts.push(x.toFixed(0) + ',' + y.toFixed(0));
+}
+return { points: pts.join(' '), color: v.color, dash: v.dash, glyph: v.glyph, year: v.year };
+});
+
+const q = s.query.trim().toLowerCase();
+const shown = ALBUMS.map((a, i) => ({ a, i })).filter((o) => !q || (o.a.title + ' ' + o.a.artist).toLowerCase().indexOf(q) >= 0);
+const cards = shown.map((o) => ({
+title: o.a.title, artist: o.a.artist, cover: o.a.cover || NOCOVER, count: o.a.versions.length,
+open: () => this.setState({ view: 'album', album: o.i })
+}));
+
+const chips = allVers.map((v) => ({
+label: v.year + ' ' + v.label, color: v.color, pressed: v.on ? 'true' : 'false',
+border: v.on ? v.color : 'var(--color-rule)', opacity: v.on ? '1' : '0.55',
+toggle: () => { const h = Object.assign({}, this.state.hidden); h[v.key] = !h[v.key]; this.setState({ hidden: h }); }
+}));
+
+const mdefs = [
+{ name: 'Integrated loudness', unit: 'Measured in LUFS, per ITU-R BS.1770' },
+{ name: 'Loudness range', unit: 'Measured in LU, per EBU Tech 3342' },
+{ name: 'Crest factor', unit: 'Measured in dB, peak minus average' },
+{ name: 'Clipped samples', unit: 'Share at full scale' }
+];
+
+const YMIN = 1985, YMAX = 2020;
+const xOf = (yr) => 70 + Math.max(0, Math.min(1, (yr - YMIN) / (YMAX - YMIN))) * 910;
+const mi = s.metric;
+const WORDS = [['Quieter', 'Louder'], ['Narrower', 'Wider'], ['Lower', 'Higher'], ['Less', 'More']];
+const yOf = (a, v, m) => { if (!isDemo) { const val = mval(ALBUMS[a].versions[v], m); return val === null ? null : 270 - frac(m, val) * 240; } const r = rng(a * 53 + v * 7 + m * 101 + 3); r(); return 60 + r() * 180; };
+const ticks = [];
+for (let y = 1985; y <= 2020; y += 5) { ticks.push({ x: xOf(y), label: String(y) }); }
+const aDots = visible.map((v) => ({ v: v, y: yOf(ai, v.idx, mi) })).filter((o) => o.y !== null).map((o) => { const v = o.v, y = o.y; return { x: xOf(v.year), y: y, ly: y - 16, year: v.year, color: v.color }; });
+const aTl = { points: aDots.map((p) => p.x.toFixed(0) + ',' + p.y.toFixed(0)).join(' '), dots: aDots };
+const mSeries = ALBUMS.map((a, i) => ({ a: a, i: i })).filter((o) => !s.hiddenAlbums[o.i]).map((o) => {
+const pts = o.a.versions.map((v, vi) => ({ v: v, vi: vi, py: yOf(o.i, vi, mi) })).filter((e) => e.py !== null).map((e) => { const v = e.v, vi = e.vi, py = e.py, px = xOf(v.year); return { x: px, y: py, ix: px - 17, iy: py - 17, color: COLORS[o.i % 4], cover: o.a.cover || NOCOVER, tip: o.a.title + ' (' + o.a.artist + '), ' + v.year + ' ' + v.label }; });
+return { points: pts.map((p) => p.x.toFixed(0) + ',' + p.y.toFixed(0)).join(' '), color: COLORS[o.i % 4], dash: DASHES[o.i % 4], pts: pts };
+});
+const mDots = [].concat.apply([], mSeries.map((k) => k.pts));
+const albumChips = ALBUMS.map((a, i) => ({
+label: a.title + ', ' + a.artist, color: COLORS[i % 4], cover: a.cover || NOCOVER,
+pressed: s.hiddenAlbums[i] ? 'false' : 'true',
+border: s.hiddenAlbums[i] ? 'var(--color-rule)' : COLORS[i % 4], opacity: s.hiddenAlbums[i] ? '0.55' : '1',
+toggle: () => { const h = Object.assign({}, this.state.hiddenAlbums); h[i] = !h[i]; this.setState({ hiddenAlbums: h }); }
+}));
+const metricBtns = mdefs.map((m, i) => ({
+label: m.name, pressed: i === mi ? 'true' : 'false', border: i === mi ? 'var(--color-accent)' : 'var(--color-rule)',
+pick: () => this.setState({ metric: i })
+}));
+
+const FMT = [(v) => v.toFixed(1), (v) => v.toFixed(1), (v) => v.toFixed(1), (v) => v.toFixed(3) + ' %'];
+const metricsOut = mdefs.map((m, i) => ({ name: m.name, unit: m.unit, rows: visible.map((v) => { const val = mval(v.src, i); return { color: v.color, year: v.year, w: val === null ? 0 : Math.max(2, Math.round(frac(i, val) * 100)), val: val === null ? 'n/a' : FMT[i](val) }; }) }));
+const fmt = (v, d) => (isFinite(v) ? v.toFixed(d) : '\u2014');
+let resView = null;
+if (s.check.res) {
+  const r = s.check.res;
+  const sh = r.short.filter((v) => isFinite(v)); const step = Math.max(1, Math.ceil(r.short.length / 300));
+  const pts = []; let lo = Infinity, hi = -Infinity; sh.forEach((v) => { if (v < lo) lo = v; if (v > hi) hi = v; });
+  if (!(hi > lo)) { hi = lo + 1; }
+  for (let i = 0; i < r.short.length; i += step) { const v = r.short[i]; if (!isFinite(v)) continue; const x = 70 + (r.short.length > 1 ? i / (r.short.length - 1) : 0) * 910; const y = 30 + (hi - v) / (hi - lo) * 210; pts.push(x.toFixed(0) + ',' + y.toFixed(0)); }
+  const mm = Math.floor(r.seconds / 60), ss = Math.round(r.seconds % 60);
+  resView = { lufs: fmt(r.integrated, 1), lra: fmt(r.lra, 1), crest: fmt(r.crest, 1), peak: fmt(r.peakDb, 1), clip: fmt(r.clipPct, 3), duration: mm + ':' + (ss < 10 ? '0' : '') + ss, points: pts.join(' '), chartMax: fmt(hi, 0) + ' LUFS', chartMin: fmt(lo, 0) + ' LUFS' };
+}
+const onFile = (e) => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  this.setState({ check: { busy: true, error: '', res: null, name: f.name } });
+  f.arrayBuffer().then((buf) => { const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext; const ctx = new AC(2, 1, 44100); return ctx.decodeAudioData(buf); })
+    .then((ab) => new Promise((ok) => setTimeout(() => ok(ab), 30)))
+    .then((ab) => { const chs = []; for (let c = 0; c < Math.min(2, ab.numberOfChannels); c++) chs.push(ab.getChannelData(c)); const r = this.analyze(chs, ab.sampleRate); this.setState({ check: { busy: false, error: '', res: r, name: f.name } }); })
+    .catch(() => this.setState({ check: { busy: false, error: 'Your browser could not read that file. Try a WAV, FLAC, MP3 or M4A.', res: null, name: f.name } }));
+};
+const q2 = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+const num = (v) => (typeof v === 'number' ? v : '');
+const csvRows = [['album', 'artist', 'album_year', 'version_year', 'version_label', 'catalog_id', 'barcode', 'ripper', 'accuraterip', 'lufs', 'lra_lu', 'crest_db', 'peak_dbfs', 'clipped_pct', 'status']].concat(allVers.map((v) => { const m = v.src.metrics || {}; const r = v.src.rip || {}; return [al.title, al.artist, al.year, v.year, v.label, v.src.id || '', v.src.barcode || '', r.ripper || '', r.accuraterip || '', num(m.lufs), num(m.lra), num(m.crest), num(m.peak), num(m.clip_pct), v.src.metrics ? 'measured' : 'not yet measured']; }));
+const csvHref = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvRows.map((row) => row.map(q2).join(',')).join('\n'));
+const jsonObj = (isLive && al.raw) ? al.raw : { album: al.title, artist: al.artist, album_year: al.year, versions: allVers.map((v) => ({ year: v.year, label: v.label, catalog_id: v.id, measurements: null })) };
+const jsonHref = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(jsonObj, null, 2));
+const exportName = (al.artist + '-' + al.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+return {
+scheme: this.props.scheme ?? 'dusk',
+wave: wave, flat: flat, gain: gain, knobTicks: knobTicks, knobAngle: -135 + (gain - 1) * 27, gainNote: gainNote,
+onGain: (e) => this.setState({ gain: Number(e.target.value) }),
+isTimeline: view === 'timeline',
+isAbout: view === 'about', isCheck: view === 'check',
+navAbout: view === 'about' ? 'var(--glass-fill-strong)' : 'transparent', navCheck: view === 'check' ? 'var(--glass-fill-strong)' : 'transparent',
+goAbout: () => this.setState({ view: 'about' }), goCheck: () => this.setState({ view: 'check' }),
+busy: s.check.busy, hasError: !!s.check.error, error: s.check.error, hasRes: !!s.check.res, fileName: s.check.name, res: resView,
+onFile: onFile,
+csvHref: csvHref, jsonHref: jsonHref, exportName: exportName,
+navTimeline: view === 'timeline' ? 'var(--glass-fill-strong)' : 'transparent',
+goTimeline: () => this.setState({ view: 'timeline' }),
+metricBtns: metricBtns, lowWord: WORDS[mi][0], highWord: WORDS[mi][1],
+ticks: ticks, bandX: xOf(1990), bandX2: xOf(2008), bandW: xOf(2008) - xOf(1990), bandTextX: xOf(1990) + 8,
+aTl: aTl, mSeries: mSeries, mDots: mDots, albumChips: albumChips,
+isDemo: isDemo, isLive: isLive, loading: mode === 'loading', loadError: mode === 'error', noAlbums: (mode === 'live' && ALBUMS.length === 0), updated: s.data.updated || '',
+isHome: view === 'home', isAlbum: view === 'album', isMethod: view === 'method', isContribute: view === 'contribute',
+navAlbums: (view === 'home' || view === 'album') ? 'var(--glass-fill-strong)' : 'transparent',
+navMethod: view === 'method' ? 'var(--glass-fill-strong)' : 'transparent',
+navContribute: view === 'contribute' ? 'var(--glass-fill-strong)' : 'transparent',
+goHome: () => this.setState({ view: 'home' }),
+goMethod: () => this.setState({ view: 'method' }),
+goContribute: () => { this.contribFiles = []; this.setState({ view: 'contribute', sent: false, contribName: '', form: { aa: '', cat: '', bar: '', em: '' }, sending: false, cerr: '', progress: '' }); },
+query: s.query,
+onSearch: (e) => this.setState({ query: e.target.value }),
+cards: cards, noResults: cards.length === 0,
+album: { title: al.title, artist: al.artist, year: al.year, cover: al.cover || NOCOVER, count: al.versions.length,
+span: al.versions.length ? ('from ' + al.versions[0].year + ' to ' + al.versions[al.versions.length - 1].year) : '' },
+chips: chips, curves: curves, visible: visible,
+metrics: metricsOut,
+provenance: allVers, hasCurves: curves.length > 0, noCurves: curves.length === 0,
+sent: s.sent, notSent: !s.sent,
+onAA: (e) => this.setState({ form: { ...this.state.form, aa: e.target.value } }),
+onCat: (e) => this.setState({ form: { ...this.state.form, cat: e.target.value } }),
+onBar: (e) => this.setState({ form: { ...this.state.form, bar: e.target.value } }),
+onEm: (e) => this.setState({ form: { ...this.state.form, em: e.target.value } }),
+onContribFile: (e) => { const fl = Array.from(e.target.files || []); this.contribFiles = fl; this.setState({ contribName: fl.map((x) => x.name).join(', '), cerr: '' }); },
+hasContribFile: !!s.contribName, contribName: s.contribName,
+form: s.form, progress: s.progress, hasProgress: !!s.progress, hasCerr: !!s.cerr, cerr: s.cerr, sendLabel: s.sending ? 'Sending...' : 'Send suggestion',
+doneTitle: DEMO_MODE ? 'Demo mode.' : 'Thanks, we received it.',
+doneText: DEMO_MODE ? 'Nothing was sent and no file left your device. On the live site this goes to the project team to verify and measure.' : 'If you gave an email, we will write when it is published.',
+submit: async () => {
+  if (this.state.sending) return;
+  const f = this.state.form, files = this.contribFiles || [];
+  const email = f.em.trim();
+  if (!f.aa.trim() && !f.cat.trim() && !f.bar.trim()) { this.setState({ cerr: 'Please give an album, catalog number or barcode.' }); return; }
+  if (email && !/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email)) { this.setState({ cerr: 'That email address does not look right.' }); return; }
+  if (!files.length) { this.setState({ cerr: 'Please attach your rip: the audio files and the .log file.' }); return; }
+  if (files.length > MAX_FILES) { this.setState({ cerr: 'Too many files. The limit is ' + MAX_FILES + '.' }); return; }
+  let total = 0;
+  for (const file of files) {
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (OK_EXT.indexOf(ext) === -1) { this.setState({ cerr: file.name + ' is not an accepted type. Use FLAC, WAV, AIFF, M4A, MP3 or OGG audio, a .log, .cue or .txt file, or a JPG, PNG or WEBP photo.' }); return; }
+    if (file.size > MAX_FILE) { this.setState({ cerr: file.name + ' is too large. The limit is 1 GB per file.' }); return; }
+    total += file.size;
+  }
+  const exts = files.map((x) => (x.name.split('.').pop() || '').toLowerCase());
+  if (!exts.some((x) => AUDIO_EXT.indexOf(x) > -1)) { this.setState({ cerr: 'Please include the audio files from your rip.' }); return; }
+  if (exts.indexOf('log') === -1) { this.setState({ cerr: 'Please include the rip log (.log) so the team can check the rip.' }); return; }
+  if (total > MAX_TOTAL) { this.setState({ cerr: 'These files add up to more than 2 GB. Send fewer files at once.' }); return; }
+  this.setState({ sending: true, cerr: '', progress: 'Starting...' });
+  try {
+    if (DEMO_MODE) {
+      for (let p = 1; p <= 5; p++) { this.setState({ progress: 'Uploading ' + files.length + ' files: ' + (p * 20) + '%' }); await new Promise((ok) => setTimeout(ok, 350)); }
+      this.setState({ progress: 'Checking the files...' }); await new Promise((ok) => setTimeout(ok, 700));
+    } else {
+      const origin = window.location.origin;
+      const start = await callScript({ action: 'start', origin: origin, artist_album: f.aa, catalog: f.cat, barcode: f.bar, email: email, website: '', files: files.map((x) => ({ name: x.name, size: x.size })) });
+      let sent = 0;
+      for (let i = 0; i < files.length; i++) {
+        for (let off = 0; off < files[i].size; off += CHUNK) {
+          const end = Math.min(off + CHUNK, files[i].size);
+          await putChunk(start.uploads[i].url, files[i].slice(off, end), off, end - 1, files[i].size);
+          sent += end - off;
+          this.setState({ progress: 'Uploading file ' + (i + 1) + ' of ' + files.length + ': ' + Math.round((sent / total) * 100) + '%' });
+        }
+      }
+      this.setState({ progress: 'Checking the files...' });
+      await callScript({ action: 'finish', origin: origin, id: start.id });
+    }
+    this.setState({ sent: true, sending: false, progress: '' });
+  } catch (err) { this.setState({ sending: false, progress: '', cerr: (err && err.message) || 'Something went wrong. Please try again.' }); }
+}
+};
+}
+}
+
+const TPL = "\n\n<div class=\"page\" data-scheme=\"{{scheme}}\">\n\n<!-- top bar -->\n<header class=\"wrap\" style=\"display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding-block:20px\">\n<button onClick=\"{{goHome}}\" style=\"background:none;border:none;padding:0;cursor:pointer;color:var(--color-ink);display:flex;align-items:baseline;gap:12px;text-align:left\">\n<span style=\"font-family:var(--font-display);font-weight:500;font-size:30px;letter-spacing:var(--tracking-display)\">Up to Eleven<span style=\"color:var(--color-accent)\">?</span></span>\n<sc-if value=\"{{isDemo}}\" hint-placeholder-val=\"{{ false }}\"><span class=\"label\">Demo</span></sc-if>\n</button>\n<nav class=\"navpill\" aria-label=\"Main\">\n<button class=\"navbtn\" onClick=\"{{goHome}}\" style=\"background-color:{{navAlbums}}\">Albums</button>\n<button class=\"navbtn\" onClick=\"{{goTimeline}}\" style=\"background-color:{{navTimeline}}\">Timeline</button>\n<button class=\"navbtn\" onClick=\"{{goMethod}}\" style=\"background-color:{{navMethod}}\">Method</button>\n<button class=\"navbtn\" onClick=\"{{goCheck}}\" style=\"background-color:{{navCheck}}\">Check your copy</button>\n<button class=\"navbtn\" onClick=\"{{goAbout}}\" style=\"background-color:{{navAbout}}\">About</button>\n<button class=\"navbtn\" onClick=\"{{goContribute}}\" style=\"background-color:{{navContribute}}\">Contribute</button>\n</nav>\n</header>\n\n<main class=\"wrap\" style=\"padding-block:40px 24px;display:flex;flex-direction:column;gap:56px\">\n<div aria-hidden=\"true\" class=\"num\" style=\"display:flex;justify-content:space-between;border-top:1px solid var(--color-rule);padding-top:var(--space-xs);margin-top:-24px;font-size:var(--text-xs);color:var(--color-muted)\"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span style=\"color:var(--color-ink-2)\">9</span><span style=\"color:var(--color-ink-2)\">10</span><span style=\"color:var(--color-accent);font-weight:500\">11</span></div>\n\n<!-- ============ HOME ============ -->\n<sc-if value=\"{{isHome}}\" hint-placeholder-val=\"{{ true }}\">\n<section style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:var(--space-2xl);align-items:center;padding-top:var(--space-lg)\">\n<div style=\"display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-lg)\">\n<h1 style=\"font-size:var(--text-hero);line-height:0.98;max-width:12ch\">Which version are you actually hearing?</h1>\n<p style=\"font-size:var(--text-lead);color:var(--color-ink-2);max-width:34ch\">Measuring how remasters changed loudness and dynamics, album by album.</p>\n<div style=\"display:flex;flex-wrap:wrap;gap:12px\">\n<a class=\"btn\" href=\"#albums\">Explore an album</a>\n<button class=\"btn btn-ghost\" onClick=\"{{goMethod}}\">How it works</button>\n</div>\n</div>\n<div class=\"dial\">\n<div class=\"dial-face\"><span class=\"record\" aria-hidden=\"true\"></span>\n<svg viewBox=\"0 0 300 300\" width=\"100%\" role=\"img\" aria-label=\"Volume knob set to {{gain}} out of 11\" >\n<sc-for list=\"{{knobTicks}}\" as=\"t\" hint-placeholder-count=\"11\"><g><line x1=\"{{t.x1}}\" y1=\"{{t.y1}}\" x2=\"{{t.x2}}\" y2=\"{{t.y2}}\" stroke=\"{{t.color}}\" stroke-width=\"3\" stroke-linecap=\"round\"></line><text x=\"{{t.tx}}\" y=\"{{t.ty}}\" text-anchor=\"middle\" font-size=\"12\" fill=\"var(--color-muted)\" style=\"font-family:var(--font-mono)\">{{t.label}}</text></g></sc-for>\n<circle cx=\"150\" cy=\"150\" r=\"84\" fill=\"var(--glass-fill-strong)\" stroke=\"var(--glass-edge)\" stroke-width=\"2\"></circle>\n<circle cx=\"150\" cy=\"150\" r=\"68\" fill=\"var(--glass-fill)\" stroke=\"var(--glass-edge)\" stroke-width=\"1\"></circle>\n<g transform=\"rotate({{knobAngle}} 150 150)\"><line x1=\"150\" y1=\"72\" x2=\"150\" y2=\"104\" stroke=\"var(--color-accent)\" stroke-width=\"5\" stroke-linecap=\"round\"></line></g>\n<text x=\"150\" y=\"168\" text-anchor=\"middle\" font-size=\"50\" fill=\"var(--color-ink)\" style=\"font-family:var(--font-display);font-weight:450\">{{gain}}</text>\n</svg></div>\n<label for=\"vol\" style=\"font-weight:600\">Turn it up</label>\n<input id=\"vol\" type=\"range\" min=\"1\" max=\"11\" step=\"1\" value=\"{{gain}}\" onInput=\"{{onGain}}\" aria-label=\"Volume, 1 to 11\" style=\"max-width:340px\">\n<p style=\"color:var(--color-ink-2);text-align:center;max-width:34ch\">{{gainNote}}</p>\n</div>\n</section>\n\n<section class=\"stage\" aria-label=\"Clipping illustration\">\n<h2 style=\"font-size:var(--text-title)\">Same song, louder master</h2>\n<svg viewBox=\"0 0 960 220\" width=\"100%\" role=\"img\" aria-label=\"Illustration: a waveform that flattens at full scale as the knob turns up\" style=\"max-width:100%\"><line x1=\"0\" y1=\"9\" x2=\"960\" y2=\"9\" stroke=\"var(--color-rule)\" stroke-width=\"1\" stroke-dasharray=\"4 6\"></line><line x1=\"0\" y1=\"211\" x2=\"960\" y2=\"211\" stroke=\"var(--color-rule)\" stroke-width=\"1\" stroke-dasharray=\"4 6\"></line><sc-for list=\"{{wave}}\" as=\"b\" hint-placeholder-count=\"96\"><rect x=\"{{b.x}}\" y=\"{{b.y}}\" width=\"6\" height=\"{{b.h}}\" rx=\"3\" fill=\"{{b.fill}}\"></rect></sc-for></svg>\n<p style=\"color:var(--color-ink-2)\">Bright bars reach the dashed full-scale line and get cut flat: <span class=\"num\">{{flat}}</span> of <span class=\"num\">96</span>.</p>\n<p class=\"label\">An illustration of clipping, not a measurement.</p>\n</section>\n\n<section class=\"glass\" style=\"padding:var(--space-lg) var(--space-xl);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-md)\">\n<div style=\"max-width:560px\"><div style=\"font-family:var(--font-display);font-size:var(--text-title)\">Have the track on your own computer?</div><div style=\"color:var(--color-ink-2)\">Drop it in and see how loud and how dynamic it is. Nothing is uploaded.</div></div>\n<button class=\"btn\" onClick=\"{{goCheck}}\">Check your own copy</button>\n</section>\n\n<section id=\"albums\" style=\"display:flex;flex-direction:column;gap:var(--space-xl)\">\n<div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px\">\n<h2 style=\"font-size:var(--text-section)\">Albums in the collection</h2>\n<label class=\"label\" style=\"display:flex;align-items:center;gap:10px\">Search\n<input class=\"field\" type=\"text\" value=\"{{query}}\" onInput=\"{{onSearch}}\" placeholder=\"Artist or album\" style=\"min-width:220px\">\n</label>\n</div>\n<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:var(--space-lg);padding-bottom:var(--space-xl)\">\n<sc-for list=\"{{cards}}\" as=\"a\" hint-placeholder-count=\"4\">\n<button class=\"tile\" onClick=\"{{a.open}}\"><span class=\"box\"><img src=\"{{a.cover}}\" alt=\"Cover of {{a.title}} by {{a.artist}}\"></span><span class=\"tname\">{{a.title}}</span><span style=\"color:var(--color-ink-2)\">{{a.artist}}</span><span class=\"label num\">{{a.count}} versions</span></button>\n</sc-for>\n</div>\n<sc-if value=\"{{noResults}}\" hint-placeholder-val=\"{{ false }}\"><p style=\"color:var(--color-ink-2)\">No albums match that search.</p></sc-if>\n<sc-if value=\"{{loading}}\" hint-placeholder-val=\"{{ false }}\"><p style=\"color:var(--color-ink-2)\">Loading the collection.</p></sc-if>\n<sc-if value=\"{{noAlbums}}\" hint-placeholder-val=\"{{ false }}\"><p style=\"color:var(--color-ink-2)\">No albums have been measured yet.</p></sc-if>\n<sc-if value=\"{{loadError}}\" hint-placeholder-val=\"{{ false }}\"><p style=\"color:var(--color-ink-2)\">The collection could not be loaded. Please reload the page.</p></sc-if>\n<sc-if value=\"{{isDemo}}\" hint-placeholder-val=\"{{ false }}\"><p class=\"label\">Demo with the pilot albums from the corpus sheet. No measurements exist yet.</p></sc-if>\n<sc-if value=\"{{isLive}}\" hint-placeholder-val=\"{{ false }}\"><p class=\"label\">Measurements updated {{updated}}.</p></sc-if>\n</section>\n</sc-if>\n\n<!-- ============ ALBUM ============ -->\n<sc-if value=\"{{isAlbum}}\" hint-placeholder-val=\"{{ false }}\">\n<section style=\"display:flex;flex-wrap:wrap;gap:var(--space-xl);align-items:flex-end\">\n<div style=\"width:240px;height:240px;flex:none;overflow:hidden;background:var(--color-paper-2);border-radius:20px;border:1px solid var(--glass-edge);box-shadow:inset 0 1px 0 var(--glass-hi),0 24px 40px -20px var(--glass-shadow)\">\n<img src=\"{{album.cover}}\" alt=\"Cover of {{album.title}} by {{album.artist}}\" style=\"width:100%;height:100%;object-fit:cover\">\n</div>\n<div style=\"flex:1 1 420px;display:flex;flex-direction:column;gap:14px;min-width:0\">\n<div><button onClick=\"{{goHome}}\" class=\"btn btn-ghost\" style=\"padding:var(--space-xs) var(--space-md);font-size:var(--text-sm)\">All albums</button></div>\n<h1 style=\"font-size:var(--text-display-s);line-height:1\">{{album.title}}</h1>\n<p style=\"color:var(--color-ink-2)\">{{album.artist}}, {{album.year}}. {{album.count}} versions, 4 metrics, {{album.span}}.</p>\n<p style=\"max-width:62ch;font-size:var(--text-lg);color:var(--color-ink-2)\">Which version are you hearing? Each CD release below is measured the same way, so the differences between masters show up side by side. Toggle versions to compare.</p>\n</div>\n</section>\n\n<sc-if value=\"{{isDemo}}\" hint-placeholder-val=\"{{ false }}\"><div class=\"notice\">\n<strong style=\"color:var(--color-ink)\">Demo data.</strong> The curves are generated placeholder shapes, not measurements. Catalog numbers come from the corpus sheet and are still being verified.\n</div></sc-if>\n\n<section aria-label=\"Choose versions to compare\" style=\"display:flex;flex-direction:column;gap:12px\">\n<div class=\"label\">Click a version to show or hide it</div>\n<div style=\"display:flex;flex-wrap:wrap;gap:12px\">\n<sc-for list=\"{{chips}}\" as=\"c\" hint-placeholder-count=\"3\">\n<button class=\"chip\" onClick=\"{{c.toggle}}\" aria-pressed=\"{{c.pressed}}\" style=\"border:2px solid {{c.border}};opacity:{{c.opacity}}\"><span style=\"width:12px;height:12px;background:{{c.color}};display:inline-block\"></span>{{c.label}}</button>\n</sc-for>\n</div>\n</section>\n\n<section class=\"sect\" style=\"position: relative\">\n<div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline\">\n<h2 style=\"font-size:var(--text-section)\">Loudness through the album</h2>\n<span class=\"label\">Short-term loudness, time-aligned</span>\n</div>\n<svg viewBox=\"0 0 1000 320\" width=\"100%\" role=\"img\" aria-label=\"Line chart of short-term loudness through the album for the selected versions\" style=\"max-width:100%\">\n<g stroke=\"var(--color-rule)\" stroke-width=\"1\">\n<line x1=\"70\" y1=\"30\" x2=\"980\" y2=\"30\"/><line x1=\"70\" y1=\"90\" x2=\"980\" y2=\"90\"/><line x1=\"70\" y1=\"150\" x2=\"980\" y2=\"150\"/><line x1=\"70\" y1=\"210\" x2=\"980\" y2=\"210\"/><line x1=\"70\" y1=\"270\" x2=\"980\" y2=\"270\"/>\n</g>\n<g font-family=\"DM Sans,sans-serif\" font-size=\"14\" fill=\"var(--color-muted)\">\n<text x=\"62\" y=\"34\" text-anchor=\"end\">Louder</text>\n<text x=\"62\" y=\"274\" text-anchor=\"end\">Quieter</text>\n<text x=\"70\" y=\"298\">Start</text>\n<text x=\"980\" y=\"298\" text-anchor=\"end\">End of album</text>\n</g>\n<g fill=\"none\" stroke-width=\"2.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\">\n<sc-for list=\"{{curves}}\" as=\"k\" hint-placeholder-count=\"3\">\n<polyline points=\"{{k.points}}\" stroke=\"{{k.color}}\" stroke-dasharray=\"{{k.dash}}\"/>\n</sc-for>\n</g>\n</svg>\n<div style=\"display:flex;flex-wrap:wrap;gap:20px;font-size:var(--text-sm);color:var(--color-ink-2)\">\n<sc-for list=\"{{curves}}\" as=\"k\" hint-placeholder-count=\"3\"><span><span style=\"color:{{k.color}}\">{{k.glyph}}</span> {{k.year}}</span></sc-for>\n</div>\n<details class=\"guide\"><summary>How to read this chart</summary><p>Each line is one version of the album, lined up so the same moment sits at the same place. Higher means louder. A line that stays high and steady means little change between quiet and loud passages. Use the version buttons above to compare two at a time.</p></details>\n</section>\n\n<section class=\"sect\">\n<div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline\">\n<h2 style=\"font-size:var(--text-section)\">How this album changed over the years</h2>\n<span class=\"label\">Horizontal axis: release year of each version</span>\n</div>\n<div role=\"group\" aria-label=\"Choose a metric\" style=\"display:flex;flex-wrap:wrap;gap:8px\">\n<sc-for list=\"{{metricBtns}}\" as=\"b\" hint-placeholder-count=\"4\">\n<button class=\"chip\" onClick=\"{{b.pick}}\" aria-pressed=\"{{b.pressed}}\" style=\"border:2px solid {{b.border}};padding:8px 14px;font-size:15px\">{{b.label}}</button>\n</sc-for>\n</div>\n<svg viewBox=\"0 0 1000 340\" width=\"100%\" role=\"img\" aria-label=\"Chart of the selected metric by release year for this album\u2019s versions, with the loudness war era shaded\" style=\"max-width:100%\">\n<rect x=\"{{bandX}}\" y=\"30\" width=\"{{bandW}}\" height=\"240\" fill=\"var(--color-accent)\" opacity=\"0.12\"/>\n<line x1=\"{{bandX}}\" y1=\"30\" x2=\"{{bandX}}\" y2=\"270\" stroke=\"var(--color-accent)\" opacity=\"0.7\"/>\n<line x1=\"{{bandX2}}\" y1=\"30\" x2=\"{{bandX2}}\" y2=\"270\" stroke=\"var(--color-accent)\" opacity=\"0.7\"/>\n<text x=\"{{bandTextX}}\" y=\"22\" font-family=\"DM Sans,sans-serif\" font-size=\"14\" fill=\"var(--color-focus)\">Loudness war era (approx.)</text>\n<g stroke=\"var(--color-rule)\" stroke-width=\"1\"><line x1=\"70\" y1=\"30\" x2=\"980\" y2=\"30\"/><line x1=\"70\" y1=\"150\" x2=\"980\" y2=\"150\"/><line x1=\"70\" y1=\"270\" x2=\"980\" y2=\"270\"/></g>\n<g font-family=\"DM Sans,sans-serif\" font-size=\"14\" fill=\"var(--color-muted)\">\n<text x=\"62\" y=\"34\" text-anchor=\"end\">{{highWord}}</text>\n<text x=\"62\" y=\"274\" text-anchor=\"end\">{{lowWord}}</text>\n<sc-for list=\"{{ticks}}\" as=\"t\" hint-placeholder-count=\"8\"><text x=\"{{t.x}}\" y=\"296\" text-anchor=\"middle\">{{t.label}}</text></sc-for>\n</g>\n<polyline points=\"{{aTl.points}}\" fill=\"none\" stroke=\"var(--color-muted)\" stroke-width=\"2\" stroke-dasharray=\"6 5\"/>\n<sc-for list=\"{{aTl.dots}}\" as=\"d\" hint-placeholder-count=\"3\">\n<circle cx=\"{{d.x}}\" cy=\"{{d.y}}\" r=\"8\" fill=\"{{d.color}}\" stroke=\"var(--color-paper)\" stroke-width=\"2\"/>\n</sc-for>\n<g font-family=\"DM Sans,sans-serif\" font-size=\"15\" fill=\"var(--color-ink)\" text-anchor=\"middle\">\n<sc-for list=\"{{aTl.dots}}\" as=\"d\" hint-placeholder-count=\"3\"><text x=\"{{d.x}}\" y=\"{{d.ly}}\">{{d.year}}</text></sc-for>\n</g>\n</svg>\n<p class=\"label\" style=\"max-width:760px\">Shaded years are an approximate, commonly cited span of the loudness war (rising loudness after 1990, peaking in the mid-2000s). The exact boundaries will come from the measurements.</p>\n<details class=\"guide\"><summary>How to read this chart</summary><p>Each dot is one version, placed by its release year. The shaded band marks the approximate loudness war era. Use the metric buttons to switch between loudness, loudness range, crest factor and clipping. The dots are demo placeholders until the versions are measured.</p></details>\n</section>\n\n<section class=\"sect\">\n<h2 style=\"font-size:var(--text-section)\">Four measurements, version by version</h2>\n<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:var(--space-xl) var(--gap-columns)\">\n<sc-for list=\"{{metrics}}\" as=\"m\" hint-placeholder-count=\"4\">\n<div style=\"display:flex;flex-direction:column;gap:16px;min-width:0\">\n<div><div style=\"font-weight:600;font-size:17px\">{{m.name}}</div><div class=\"label\">{{m.unit}}</div></div>\n<div style=\"display:flex;flex-direction:column;gap:10px\">\n<sc-for list=\"{{m.rows}}\" as=\"r\" hint-placeholder-count=\"3\">\n<div style=\"display:flex;align-items:center;gap:10px\">\n<span style=\"width:12px;height:12px;background:{{r.color}};flex:none\"></span>\n<span class=\"num\" style=\"width:44px;font-variant-numeric:tabular-nums;color:var(--color-ink-2)\">{{r.year}}</span>\n<div style=\"flex:1;height:8px;background:var(--color-paper-3)\"><div style=\"height:8px;width:{{r.w}}%;background:{{r.color}}\"></div></div>\n<span class=\"label num\" style=\"width:60px;text-align:right\">{{r.val}}</span>\n</div>\n</sc-for>\n</div>\n</div>\n</sc-for>\n</div>\n</section>\n\n<section class=\"sect\">\n<h2 style=\"font-size:var(--text-section)\">Provenance: exactly which pressing was measured</h2>\n<div style=\"overflow-x:auto\">\n<table style=\"width:100%;border-collapse:collapse;font-size:15px;min-width:640px\">\n<thead>\n<tr style=\"text-align:left;color:var(--color-muted);font-size:var(--text-sm)\">\n<th style=\"padding:12px 16px 12px 0;font-weight:500;border-bottom:1px solid var(--color-muted)\">Version</th>\n<th style=\"padding:12px 16px;font-weight:500;border-bottom:1px solid var(--color-muted)\">Year</th>\n<th style=\"padding:12px 16px;font-weight:500;border-bottom:1px solid var(--color-muted)\">Catalog no. / ID</th>\n<th style=\"padding:12px 0 12px 16px;font-weight:500;border-bottom:1px solid var(--color-muted)\">Rip and measurement</th>\n</tr>\n</thead>\n<tbody>\n<sc-for list=\"{{provenance}}\" as=\"p\" hint-placeholder-count=\"3\">\n<tr>\n<td style=\"padding:14px 16px 14px 0;border-bottom:1px solid var(--color-rule)\">{{p.label}}</td>\n<td class=\"num\" style=\"padding:14px 16px;border-bottom:1px solid var(--color-rule)\">{{p.year}}</td>\n<td class=\"num\" style=\"padding:14px 16px;border-bottom:1px solid var(--color-rule)\">{{p.id}}</td>\n<td style=\"padding:14px 0 14px 16px;border-bottom:1px solid var(--color-rule);color:var(--color-muted)\">{{p.rip}}</td>\n</tr>\n</sc-for>\n</tbody>\n</table>\n</div>\n<div style=\"display:flex;flex-wrap:wrap;align-items:center;gap:12px\">\n<a class=\"btn btn-ghost\" href=\"{{csvHref}}\" download=\"{{exportName}}.csv\">Download CSV</a>\n<a class=\"btn btn-ghost\" href=\"{{jsonHref}}\" download=\"{{exportName}}.json\">Download JSON</a>\n<span class=\"label\">Versions without a measurement are listed with empty values.</span>\n</div>\n<p class=\"label\" style=\"max-width:720px\">Every measurement is tied to one pressing, so versions are compared as versions of one album.</p>\n</section>\n\n<section class=\"sect\" style=\"flex-direction:row;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between\">\n<div style=\"max-width:620px\"><div style=\"font-family:var(--font-display);font-weight:500;font-size:var(--text-title)\">Have a different pressing of {{album.title}}?</div><div style=\"color:var(--color-ink-2)\">Suggest it and the project team will verify and measure it.</div></div>\n<button class=\"btn\" onClick=\"{{goContribute}}\">Suggest a pressing</button>\n</section>\n</sc-if>\n\n<!-- ============ TIMELINE ============ -->\n<sc-if value=\"{{isTimeline}}\" hint-placeholder-val=\"{{ false }}\">\n<section style=\"display:flex;flex-direction:column;gap:20px;max-width:820px\">\n<h1 style=\"font-size:var(--text-display-s);line-height:1.02\">Every album, across the loudness war</h1>\n<p style=\"font-size:var(--text-lg);color:var(--color-ink-2)\">Each line is one album. Each dot is one version, placed by its release year. Pick a metric to see how albums moved through the loudness war era.</p>\n</section>\n<sc-if value=\"{{isDemo}}\" hint-placeholder-val=\"{{ false }}\"><div class=\"notice\">\n<strong style=\"color:var(--color-ink)\">Demo data.</strong> Positions are generated placeholders, not measurements.\n</div></sc-if>\n<section class=\"sect\">\n<div role=\"group\" aria-label=\"Choose a metric\" style=\"display:flex;flex-wrap:wrap;gap:8px\">\n<sc-for list=\"{{metricBtns}}\" as=\"b\" hint-placeholder-count=\"4\">\n<button class=\"chip\" onClick=\"{{b.pick}}\" aria-pressed=\"{{b.pressed}}\" style=\"border:2px solid {{b.border}};padding:8px 14px;font-size:15px\">{{b.label}}</button>\n</sc-for>\n</div>\n<svg viewBox=\"0 0 1000 340\" width=\"100%\" role=\"img\" aria-label=\"Chart of the selected metric by release year for all albums, each version shown as its album cover, with the loudness war era shaded\" style=\"max-width:100%\">\n<defs><clipPath id=\"coverClip\" clipPathUnits=\"objectBoundingBox\"><circle cx=\"0.5\" cy=\"0.5\" r=\"0.5\"/></clipPath></defs>\n<rect x=\"{{bandX}}\" y=\"30\" width=\"{{bandW}}\" height=\"240\" fill=\"var(--color-accent)\" opacity=\"0.12\"/>\n<line x1=\"{{bandX}}\" y1=\"30\" x2=\"{{bandX}}\" y2=\"270\" stroke=\"var(--color-accent)\" opacity=\"0.7\"/>\n<line x1=\"{{bandX2}}\" y1=\"30\" x2=\"{{bandX2}}\" y2=\"270\" stroke=\"var(--color-accent)\" opacity=\"0.7\"/>\n<text x=\"{{bandTextX}}\" y=\"22\" font-family=\"DM Sans,sans-serif\" font-size=\"14\" fill=\"var(--color-focus)\">Loudness war era (approx.)</text>\n<g stroke=\"var(--color-rule)\" stroke-width=\"1\"><line x1=\"70\" y1=\"30\" x2=\"980\" y2=\"30\"/><line x1=\"70\" y1=\"150\" x2=\"980\" y2=\"150\"/><line x1=\"70\" y1=\"270\" x2=\"980\" y2=\"270\"/></g>\n<g font-family=\"DM Sans,sans-serif\" font-size=\"14\" fill=\"var(--color-muted)\">\n<text x=\"62\" y=\"34\" text-anchor=\"end\">{{highWord}}</text>\n<text x=\"62\" y=\"274\" text-anchor=\"end\">{{lowWord}}</text>\n<sc-for list=\"{{ticks}}\" as=\"t\" hint-placeholder-count=\"8\"><text x=\"{{t.x}}\" y=\"296\" text-anchor=\"middle\">{{t.label}}</text></sc-for>\n</g>\n<g fill=\"none\" stroke-width=\"2.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\">\n<sc-for list=\"{{mSeries}}\" as=\"k\" hint-placeholder-count=\"4\"><polyline points=\"{{k.points}}\" stroke=\"{{k.color}}\" stroke-dasharray=\"{{k.dash}}\"/></sc-for>\n</g>\n<sc-for list=\"{{mDots}}\" as=\"d\" hint-placeholder-count=\"8\">\n<g>\n<title>{{d.tip}}</title>\n<circle cx=\"{{d.x}}\" cy=\"{{d.y}}\" r=\"19\" fill=\"var(--color-paper)\"/>\n<image href=\"{{d.cover}}\" x=\"{{d.ix}}\" y=\"{{d.iy}}\" width=\"34\" height=\"34\" preserveAspectRatio=\"xMidYMid slice\" clip-path=\"url(#coverClip)\"/>\n<circle cx=\"{{d.x}}\" cy=\"{{d.y}}\" r=\"17\" fill=\"none\" stroke=\"{{d.color}}\" stroke-width=\"3\"/>\n</g>\n</sc-for>\n</svg>\n<div style=\"display:flex;flex-wrap:wrap;gap:12px\">\n<sc-for list=\"{{albumChips}}\" as=\"c\" hint-placeholder-count=\"4\">\n<button class=\"chip\" onClick=\"{{c.toggle}}\" aria-pressed=\"{{c.pressed}}\" style=\"border:2px solid {{c.border}};opacity:{{c.opacity}};font-size:15px\"><img src=\"{{c.cover}}\" alt=\"\" style=\"width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid {{c.color}}\">{{c.label}}</button>\n</sc-for>\n</div>\n<p class=\"label\" style=\"max-width:760px\">Shaded years are an approximate, commonly cited span of the loudness war (rising loudness after 1990, peaking in the mid-2000s). The exact boundaries will come from the measurements.</p>\n<details class=\"guide\"><summary>How to read this chart</summary><p>Each cover is one version of one album, placed by its release year. Lines join the versions of the same album. The shaded band marks the approximate loudness war era. Switch metrics with the buttons, and hide albums with the chips below the chart. The positions are placeholders until the versions are measured.</p></details>\n</section>\n</sc-if>\n\n<!-- ============ METHOD ============ -->\n<sc-if value=\"{{isMethod}}\" hint-placeholder-val=\"{{ false }}\">\n<section style=\"display:flex;flex-direction:column;gap:20px;max-width:820px\">\n<h1 style=\"font-size:var(--text-display-s);line-height:1.02\">How every version is measured</h1>\n<p style=\"font-size:var(--text-lg);color:var(--color-ink-2)\">The project measures quantitative differences in the audio signal, not listener preference. It shows what changed between versions, not which is better.</p>\n</section>\n<section class=\"glass tracklist\">\n<div class=\"trk\"><span class=\"num\" style=\"color:var(--color-accent)\">01</span><h2 style=\"font-size:var(--text-title)\">Acquire and match</h2><p style=\"color:var(--color-ink-2)\">Each CD is acquired secondhand and matched to a specific pressing by catalog number and barcode against public release records.</p></div>\n<div class=\"trk\"><span class=\"num\" style=\"color:var(--color-accent)\">02</span><h2 style=\"font-size:var(--text-title)\">Rip losslessly</h2><p style=\"color:var(--color-ink-2)\">Each disc is ripped to a lossless audio file, keeping its catalog number as provenance data.</p></div>\n<div class=\"trk\"><span class=\"num\" style=\"color:var(--color-accent)\">03</span><h2 style=\"font-size:var(--text-title)\">Measure</h2><p style=\"color:var(--color-ink-2)\">An open-source Python pipeline measures every track with the same settings, following EBU and ITU standards.</p></div>\n<div class=\"trk\"><span class=\"num\" style=\"color:var(--color-accent)\">04</span><h2 style=\"font-size:var(--text-title)\">Visualize</h2><p style=\"color:var(--color-ink-2)\">Loudness curves are time-aligned so versions of an album can be compared side by side.</p></div>\n</section>\n<section style=\"display:flex;flex-direction:column;gap:16px;max-width:820px\">\n<h2 style=\"font-size:var(--text-section)\">The four measurements</h2>\n<div style=\"display:flex;flex-direction:column;gap:14px\">\n<div><strong>Integrated loudness</strong> <span style=\"color:var(--color-muted)\">(LUFS)</span><div style=\"color:var(--color-ink-2)\">How loud a track is overall.</div></div>\n<div><strong>Loudness range</strong> <span style=\"color:var(--color-muted)\">(LU)</span><div style=\"color:var(--color-ink-2)\">How much the loudness varies from quiet to loud passages.</div></div>\n<div><strong>Crest factor</strong> <span style=\"color:var(--color-muted)\">(dB)</span><div style=\"color:var(--color-ink-2)\">The gap between a track\u2019s peaks and its average level.</div></div>\n<div><strong>Clipping</strong><div style=\"color:var(--color-ink-2)\">The share of samples that hit the maximum level.</div></div>\n</div>\n</section>\n</sc-if>\n\n\n<!-- ============ ABOUT ============ -->\n<sc-if value=\"{{isAbout}}\" hint-placeholder-val=\"{{ false }}\">\n<section style=\"display:flex;flex-direction:column;gap:20px;max-width:820px\">\n<h1 style=\"font-size:var(--text-display-s);line-height:1.02\">About the project</h1>\n<p style=\"font-size:var(--text-lg);color:var(--color-ink-2)\">A public tool for seeing what a remaster actually changed.</p>\n</section>\n<section class=\"glass tracklist\">\n<div class=\"trk plain\"><h2 style=\"font-size:var(--text-title)\">Why it exists</h2><p style=\"color:var(--color-ink-2)\">Streaming services list remasters next to song titles, but nothing says what changed. This project measures the CD versions of one album the same way, so the differences can be seen side by side.</p></div>\n<div class=\"trk plain\"><h2 style=\"font-size:var(--text-title)\">What it measures</h2><p style=\"color:var(--color-ink-2)\">Four things about the audio signal: overall loudness, loudness range, crest factor and clipping. It does not rate which version sounds better.</p></div>\n<div class=\"trk plain\"><h2 style=\"font-size:var(--text-title)\">What it covers, and what it does not</h2><p style=\"color:var(--color-ink-2)\">A small pilot set of CD pressings, each tied to one catalog number. Results describe those pressings only, not every release of an album and not streaming masters.</p></div>\n<div class=\"trk plain\"><h2 style=\"font-size:var(--text-title)\">Data and code</h2><p style=\"color:var(--color-ink-2)\">The measurement code and the data are meant to be open. Repository: [link to come]. Licence: [to be chosen]. Data archive: [DOI to come].</p></div>\n<div class=\"trk plain\"><h2 style=\"font-size:var(--text-title)\">How to cite</h2><p style=\"color:var(--color-ink-2)\">[A suggested citation will appear here once the first data release is published.]</p></div>\n<div class=\"trk plain\"><h2 style=\"font-size:var(--text-title)\">Who made it</h2><p style=\"color:var(--color-ink-2)\">Created by Thomas Prisco with the Digital Learning and Media Center at Colgate University. Contact: [email to come].</p></div>\n</section>\n</sc-if>\n\n<!-- ============ CHECK ============ -->\n<sc-if value=\"{{isCheck}}\" hint-placeholder-val=\"{{ false }}\">\n<section style=\"display:flex;flex-direction:column;gap:20px;max-width:820px\">\n<h1 style=\"font-size:var(--text-display-s);line-height:1.02\">Check your own copy</h1>\n<p style=\"font-size:var(--text-lg);color:var(--color-ink-2)\">Choose a track from your own library and see how loud and how dynamic it is.</p>\n<div class=\"notice\"><strong style=\"color:var(--color-ink)\">Nothing is uploaded.</strong> The file is read and measured inside your browser, on your device.</div>\n</section>\n<section class=\"glass\" style=\"padding:var(--space-xl);display:flex;flex-direction:column;gap:var(--space-md)\">\n<label for=\"trackfile\" style=\"font-weight:600\">Audio file</label>\n<input id=\"trackfile\" class=\"field\" type=\"file\" accept=\"audio/*\" onChange=\"{{onFile}}\">\n<p class=\"label\">WAV or FLAC rips give the closest match to the lab measurements. MP3 and other lossy files can read differently.</p>\n<sc-if value=\"{{busy}}\" hint-placeholder-val=\"{{ false }}\"><p role=\"status\" style=\"color:var(--color-accent)\">Measuring {{fileName}}. A long track can take a few seconds.</p></sc-if>\n<sc-if value=\"{{hasError}}\" hint-placeholder-val=\"{{ false }}\"><p role=\"alert\" style=\"color:var(--color-ink)\">{{error}}</p></sc-if>\n</section>\n<sc-if value=\"{{hasRes}}\" hint-placeholder-val=\"{{ false }}\">\n<section class=\"sect\">\n<div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline\"><h2 style=\"font-size:var(--text-section)\">{{fileName}}</h2><span class=\"label num\">{{res.duration}}</span></div>\n<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:var(--space-xl) var(--gap-columns)\">\n<div class=\"stat\"><span style=\"font-weight:600\">Integrated loudness</span><span class=\"big\">{{res.lufs}} <span class=\"label\">LUFS</span></span><span class=\"label\">How loud the track is overall.</span></div>\n<div class=\"stat\"><span style=\"font-weight:600\">Loudness range</span><span class=\"big\">{{res.lra}} <span class=\"label\">LU</span></span><span class=\"label\">The spread between quiet and loud passages.</span></div>\n<div class=\"stat\"><span style=\"font-weight:600\">Crest factor</span><span class=\"big\">{{res.crest}} <span class=\"label\">dB</span></span><span class=\"label\">Peak level minus average level. Lower means a flatter waveform.</span></div>\n<div class=\"stat\"><span style=\"font-weight:600\">Sample peak</span><span class=\"big\">{{res.peak}} <span class=\"label\">dBFS</span></span><span class=\"label\">The highest sample. Zero is full scale.</span></div>\n<div class=\"stat\"><span style=\"font-weight:600\">Clipped samples</span><span class=\"big\">{{res.clip}} <span class=\"label\">%</span></span><span class=\"label\">The share of samples sitting at full scale.</span></div>\n</div>\n<div style=\"display:flex;flex-direction:column;gap:8px\"><div style=\"font-weight:600\">Loudness through the track</div>\n<svg viewBox=\"0 0 1000 280\" width=\"100%\" role=\"img\" aria-label=\"Line chart of short-term loudness through the track you chose\" style=\"max-width:100%\">\n<g stroke=\"var(--color-rule)\" stroke-width=\"1\"><line x1=\"70\" y1=\"30\" x2=\"980\" y2=\"30\"></line><line x1=\"70\" y1=\"135\" x2=\"980\" y2=\"135\"></line><line x1=\"70\" y1=\"240\" x2=\"980\" y2=\"240\"></line></g>\n<g font-family=\"DM Mono,monospace\" font-size=\"13\" fill=\"var(--color-muted)\"><text x=\"62\" y=\"34\" text-anchor=\"end\">{{res.chartMax}}</text><text x=\"62\" y=\"244\" text-anchor=\"end\">{{res.chartMin}}</text><text x=\"70\" y=\"266\">Start</text><text x=\"980\" y=\"266\" text-anchor=\"end\">End</text></g>\n<polyline points=\"{{res.points}}\" fill=\"none\" stroke=\"var(--color-accent)\" stroke-width=\"2.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"></polyline>\n</svg></div>\n<details class=\"guide\"><summary>How to read these numbers</summary><p>Loudness is measured in LUFS, a standard scale where a higher number is louder. Loudness range and crest factor describe how much the track breathes between quiet and loud moments. Clipped samples are moments where the waveform is cut flat at full scale. The method follows ITU-R BS.1770 and EBU Tech 3342. Your browser decodes the file first, at 44.1 kHz, so results are close to, but not identical to, the lab measurements.</p></details>\n<div><button class=\"btn btn-ghost\" onClick=\"{{goMethod}}\">How the lab measures</button></div>\n</section>\n</sc-if>\n</sc-if>\n\n<!-- ============ CONTRIBUTE ============ -->\n<sc-if value=\"{{isContribute}}\" hint-placeholder-val=\"{{ false }}\">\n<section style=\"display:flex;flex-direction:column;gap:var(--space-sm);max-width:760px\">\n<h1 style=\"font-size:var(--text-section);line-height:1.05\">Suggest a pressing</h1>\n<p style=\"font-size:var(--text-lead);color:var(--color-ink-2)\">Send us your rip of a pressing. We check it, measure it and publish it.</p>\n</section>\n<sc-if value=\"{{sent}}\" hint-placeholder-val=\"{{ false }}\">\n<div role=\"status\" style=\"max-width:760px;border:1px solid var(--color-success-text);border-radius:var(--radius-panel);padding:var(--space-lg)\"><strong style=\"color:var(--color-success-text)\">{{doneTitle}}</strong> {{doneText}}</div>\n</sc-if>\n<sc-if value=\"{{notSent}}\" hint-placeholder-val=\"{{ true }}\">\n<section class=\"contrib\" style=\"margin-top:calc(var(--space-lg) * -1)\">\n<div class=\"glass fgrid\" style=\"padding:var(--space-lg)\">\n<label class=\"span2\" style=\"display:flex;flex-direction:column;gap:6px;font-weight:500\">Artist and album<input class=\"field\" type=\"text\" value=\"{{form.aa}}\" onInput=\"{{onAA}}\" placeholder=\"e.g. Rush, Moving Pictures\"></label>\n<label style=\"display:flex;flex-direction:column;gap:6px;font-weight:500\">Catalog number<input class=\"field\" type=\"text\" value=\"{{form.cat}}\" onInput=\"{{onCat}}\" placeholder=\"On the disc or spine\"></label>\n<label style=\"display:flex;flex-direction:column;gap:6px;font-weight:500\">Barcode<input class=\"field\" type=\"text\" value=\"{{form.bar}}\" onInput=\"{{onBar}}\" placeholder=\"Under the barcode\"></label>\n<label class=\"span2\" style=\"display:flex;flex-direction:column;gap:6px;font-weight:500\">Your email, optional<input class=\"field\" type=\"email\" value=\"{{form.em}}\" onInput=\"{{onEm}}\" placeholder=\"So we can tell you when it is added\"></label>\n<label class=\"span2\" style=\"display:flex;flex-direction:column;gap:6px;font-weight:500\">Your rip<input class=\"field\" type=\"file\" multiple onChange=\"{{onContribFile}}\" accept=\".flac,.wav,.aif,.aiff,.m4a,.mp3,.ogg,.jpg,.jpeg,.png,.webp,.log,.cue,.txt\"><span class=\"label\" style=\"font-weight:400\">FLACs, .cue, .log, disc photo. Up to 1 GB each; unsafe files are deleted.</span></label>\n<sc-if value=\"{{hasContribFile}}\" hint-placeholder-val=\"{{ false }}\"><p class=\"label span2\" role=\"status\">Attached: <span class=\"num\">{{contribName}}</span></p></sc-if>\n<sc-if value=\"{{hasProgress}}\" hint-placeholder-val=\"{{ false }}\"><p role=\"status\" class=\"label span2\">{{progress}}</p></sc-if>\n<sc-if value=\"{{hasCerr}}\" hint-placeholder-val=\"{{ false }}\"><p role=\"alert\" class=\"span2\" style=\"color:var(--color-accent)\">{{cerr}}</p></sc-if>\n<div class=\"span2\"><button class=\"btn\" onClick=\"{{submit}}\">{{sendLabel}}</button></div>\n</div>\n<aside class=\"glass\" aria-label=\"How to rip your CD\" style=\"padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-md)\">\n<h2 style=\"font-size:var(--text-title)\">Rip it the standard way</h2>\n<ol class=\"steps\">\n<li><span class=\"num\">01</span><div><strong>Use the real disc.</strong> Rip from the CD itself, not from streaming or lossy files.</div></li>\n<li><span class=\"num\">02</span><div><strong>Use a secure ripper.</strong> XLD on a Mac, Exact Audio Copy on Windows.</div></li>\n<li><span class=\"num\">03</span><div><strong>Set it up.</strong> FLAC, one file per track, AccurateRip on, cue sheet and log on, no normalization.</div></li>\n<li><span class=\"num\">04</span><div><strong>Read the log.</strong> Look for \u201cAll tracks accurately ripped.\u201d If it is missing, clean the disc and rip again. A rare pressing may not be in the database; send it with a note.</div></li>\n<li><span class=\"num\">05</span><div><strong>Send it unedited.</strong> Do not edit, convert or re-save any file.</div></li>\n</ol>\n<details class=\"guide\"><summary>XLD settings (Mac)</summary><p>Open Preferences. Set the output format to FLAC and the ripper mode to XLD Secure Ripper. Turn on creating a cue sheet and saving a log file. Insert the disc, choose Open Disc, then Extract. The log\u2019s AccurateRip summary ends with \u201cAll tracks accurately ripped\u201d when every track matched. Menu names can differ a little between versions.</p></details>\n<details class=\"guide\"><summary>Exact Audio Copy settings (Windows)</summary><p>Run the configuration wizard, then open Drive Options and choose secure mode with the features your drive supports. Insert a popular CD first so AccurateRip can find your drive\u2019s read offset on its own. Choose FLAC as the compression format. Use Action, then Test &amp; Copy Selected Tracks, then Create CUE Sheet. Save the log. Menu names can differ a little between versions.</p></details>\n</aside>\n</section>\n</sc-if>\n</sc-if>\n\n</main>\n\n<footer class=\"wrap\" style=\"border-top:1px solid var(--color-rule);margin-top:56px;padding-block:28px 40px;font-size:var(--text-sm);color:var(--color-muted)\">\n<p style=\"max-width:620px\">Up to Eleven? was created by Thomas Prisco with the Digital Learning and Media Center at Colgate University. Measurements follow ITU-R BS.1770 and EBU Tech 3341 and 3342. Album covers are shown for identification.</p>\n</footer>\n\n</div>\n";
+const comp = new Component({ scheme: 'dusk' });
+let handlers = [];
+const esc = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const get = (path, scope, vals) => { const parts = path.trim().split('.'); let v = parts[0] in scope ? scope[parts[0]] : vals[parts[0]]; for (const p of parts.slice(1)) v = v == null ? v : v[p]; return v; };
+function proc(t, scope, vals) {
+  let out = '', i = 0;
+  while (i < t.length) {
+    const rest = t.slice(i); const m = rest.match(/<sc-(if|for)\b[^>]*>/);
+    if (!m) { out += rest; break; }
+    out += rest.slice(0, m.index);
+    const start = i + m.index, tag = m[1];
+    const re = new RegExp('<sc-' + tag + '\\b|</sc-' + tag + '>', 'g'); re.lastIndex = start;
+    let depth = 0, end, mm;
+    while ((mm = re.exec(t))) { if (mm[0][1] !== '/') depth++; else { depth--; if (!depth) { end = mm.index; break; } } }
+    const inner = t.slice(start + m[0].length, end), open = m[0];
+    if (tag === 'if') { if (get(open.match(/value="\{\{([^}]+)\}\}"/)[1], scope, vals)) out += proc(inner, scope, vals); }
+    else { const list = get(open.match(/list="\{\{([^}]+)\}\}"/)[1], scope, vals) || []; const as = open.match(/as="(\w+)"/)[1]; list.forEach((it, idx) => { out += proc(inner, Object.assign({}, scope, { [as]: it, $index: idx }), vals); }); }
+    i = end + ('</sc-' + tag + '>').length;
+  }
+  out = out.replace(/\son(Click|Input|Change)="\{\{([^}]+)\}\}"/g, (m, ev, p) => { const fn = get(p, scope, vals); handlers.push(fn); return ' data-on-' + ev.toLowerCase() + '="' + (handlers.length - 1) + '"'; });
+  return out.replace(/\{\{([^}]+)\}\}/g, (m, p) => { const v = get(p, scope, vals); return v == null ? '' : esc(v); });
+}
+function patch(a, b) {
+  if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b.cloneNode(true)); return; }
+  if (a.nodeType === 3) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+  if (a.nodeType !== 1) return;
+  for (const at of Array.from(a.attributes)) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+  for (const at of Array.from(b.attributes)) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+  if (a.nodeName === 'INPUT' && a.type !== 'file' && document.activeElement !== a && a.value !== b.getAttribute('value')) a.value = b.getAttribute('value') || '';
+  const ac = Array.from(a.childNodes), bc = Array.from(b.childNodes);
+  for (let k = 0; k < bc.length; k++) { if (k < ac.length) patch(ac[k], bc[k]); else a.appendChild(bc[k].cloneNode(true)); }
+  for (let k = ac.length - 1; k >= bc.length; k--) ac[k].remove();
+}
+window.__render = () => {
+  handlers = [];
+  const vals = comp.renderVals();
+  const html = proc(TPL, {}, vals);
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  patch(document.getElementById('app'), (() => { const w = document.createElement('div'); w.id = 'app'; while (tmp.firstChild) w.appendChild(tmp.firstChild); return w; })());
+};
+const app = document.getElementById('app');
+app.addEventListener('click', (e) => { const el = e.target.closest('[data-on-click]'); if (el) { const fn = handlers[+el.getAttribute('data-on-click')]; if (fn) { const y = scrollY; fn(e); if (el.closest('header')) scrollTo(0, 0); } } });
+app.addEventListener('input', (e) => { const el = e.target.closest('[data-on-input]'); if (el) { const fn = handlers[+el.getAttribute('data-on-input')]; if (fn) fn(e); } });
+app.addEventListener('change', (e) => { const el = e.target.closest('[data-on-change]'); if (el) { const fn = handlers[+el.getAttribute('data-on-change')]; if (fn) fn(e); } });
+window.__render();
+</script></body></html>
