@@ -1,6 +1,6 @@
 # Up to Eleven?
 
-A static site plus a Python script. You own both, and nothing needs Colgate IT.
+A static site plus a Python script.
 
     docs/index.html      the site (one file, rebuilt only if you change the design)
     docs/data/           everything the site shows: index.json, albums/*.json, covers/
