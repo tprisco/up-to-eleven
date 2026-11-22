@@ -12,12 +12,12 @@
     },
     {
       "id": "nirvana-nevermind",
-      "title": "Nevermind",
+      "title": "Nevermind [20th Anniversary Edition] - CD One (Original Album + B-Sides)",
       "artist": "Nirvana",
       "year": 1991,
       "cover": "covers/nirvana-nevermind.jpg",
       "file": "albums/nirvana-nevermind.json",
-      "versions": 2
+      "versions": 3
     },
     {
       "id": "red-hot-chili-peppers-californication",
