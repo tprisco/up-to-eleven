@@ -1,1 +1,24 @@
-{ "schema": 1, "albums": [], "updated": "" }
+{
+  "schema": 1,
+  "albums": [
+    {
+      "id": "linda-smith-do-you-know-the-way",
+      "title": "Do You Know The Way ...?",
+      "artist": "Linda Smith",
+      "year": 1988,
+      "cover": "covers/linda-smith-do-you-know-the-way.jpg",
+      "file": "albums/linda-smith-do-you-know-the-way.json",
+      "versions": 1
+    },
+    {
+      "id": "rush-vapor-trails",
+      "title": "Vapor Trails",
+      "artist": "Rush",
+      "year": 2002,
+      "cover": "covers/rush-vapor-trails.jpeg",
+      "file": "albums/rush-vapor-trails.json",
+      "versions": 1
+    }
+  ],
+  "updated": "2026-11-22"
+}
