@@ -9,15 +9,6 @@
       "cover": "covers/megadeth-rust-in-peace.jpg",
       "file": "albums/megadeth-rust-in-peace.json",
       "versions": 3
-    },
-    {
-      "id": "red-hot-chili-peppers-californication",
-      "title": "Californication",
-      "artist": "Red Hot Chili Peppers",
-      "year": 1999,
-      "cover": "covers/red-hot-chili-peppers-californication.jpg",
-      "file": "albums/red-hot-chili-peppers-californication.json",
-      "versions": 1
     }
   ],
   "updated": "2026-11-22"
