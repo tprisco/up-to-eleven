@@ -2,15 +2,6 @@
   "schema": 1,
   "albums": [
     {
-      "id": "linda-smith-do-you-know-the-way",
-      "title": "Do You Know The Way ...?",
-      "artist": "Linda Smith",
-      "year": 1988,
-      "cover": "covers/linda-smith-do-you-know-the-way.jpg",
-      "file": "albums/linda-smith-do-you-know-the-way.json",
-      "versions": 1
-    },
-    {
       "id": "megadeth-rust-in-peace",
       "title": "Rust In Peace",
       "artist": "Megadeth",
