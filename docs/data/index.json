@@ -11,6 +11,15 @@
       "versions": 1
     },
     {
+      "id": "megadeth-rust-in-peace",
+      "title": "Rust In Peace",
+      "artist": "Megadeth",
+      "year": 1990,
+      "cover": "covers/megadeth-rust-in-peace.jpg",
+      "file": "albums/megadeth-rust-in-peace.json",
+      "versions": 1
+    },
+    {
       "id": "rush-vapor-trails",
       "title": "Vapor Trails",
       "artist": "Rush",
