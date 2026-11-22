@@ -18,15 +18,6 @@
       "cover": "covers/megadeth-rust-in-peace.jpg",
       "file": "albums/megadeth-rust-in-peace.json",
       "versions": 3
-    },
-    {
-      "id": "rush-vapor-trails",
-      "title": "Vapor Trails",
-      "artist": "Rush",
-      "year": 2002,
-      "cover": "covers/rush-vapor-trails.jpeg",
-      "file": "albums/rush-vapor-trails.json",
-      "versions": 2
     }
   ],
   "updated": "2026-11-22"
